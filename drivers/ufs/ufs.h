@@ -2,6 +2,7 @@
 #ifndef __UFS_H
 #define __UFS_H
 
+#include <asm/io.h>
 #include "unipro.h"
 
 struct udevice;
@@ -931,6 +932,23 @@ enum {
 	writel((val), (hba)->mmio_base + (reg))
 #define ufshcd_readl(hba, reg) \
 	readl((hba)->mmio_base + (reg))
+
+/**
+ * ufshcd_rmwl - perform read/modify/write for a controller register
+ * @hba: per adapter instance
+ * @mask: mask to apply on read value
+ * @val: actual value to write
+ * @reg: register address
+ */
+static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
+{
+	u32 tmp;
+
+	tmp = ufshcd_readl(hba, reg);
+	tmp &= ~mask;
+	tmp |= (val & mask);
+	ufshcd_writel(hba, tmp, reg);
+}
 
 /* UTRLRSR - UTP Transfer Request Run-Stop Register 60h */
 #define UTP_TRANSFER_REQ_LIST_RUN_STOP_BIT	0x1
