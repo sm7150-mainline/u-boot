@@ -695,6 +695,7 @@ struct ufs_dev_cmd {
 
 struct ufs_hba_ops {
 	int (*init)(struct ufs_hba *hba);
+	void (*dbg_register_dump)(struct ufs_hba *hba);
 	int (*hce_enable_notify)(struct ufs_hba *hba,
 				 enum ufs_notify_change_status);
 	int (*link_startup_notify)(struct ufs_hba *hba,
@@ -768,6 +769,12 @@ static inline int ufshcd_ops_init(struct ufs_hba *hba)
 		return hba->ops->init(hba);
 
 	return 0;
+}
+
+static inline void ufshcd_ops_dbg_register_dump(struct ufs_hba *hba)
+{
+	if (hba->ops && hba->ops->dbg_register_dump)
+		hba->ops->dbg_register_dump(hba);
 }
 
 static inline int ufshcd_ops_hce_enable_notify(struct ufs_hba *hba,
@@ -957,5 +964,7 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
 #define UTP_TASK_REQ_LIST_RUN_STOP_BIT		0x1
 
 int ufshcd_probe(struct udevice *dev, struct ufs_hba_ops *hba_ops);
+int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+		     const char *prefix);
 
 #endif

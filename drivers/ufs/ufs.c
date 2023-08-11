@@ -60,9 +60,80 @@
 /* maximum bytes per request */
 #define UFS_MAX_BYTES	(128 * 256 * 1024)
 
+#define ufshcd_hex_dump(prefix_str, buf, len) do {                      \
+	size_t __len = (len);                                           \
+	print_hex_dump(prefix_str,                             		\
+		       DUMP_PREFIX_OFFSET,				\
+		       16, 4, buf, __len, false);                       \
+} while (0)
+
 static inline bool ufshcd_is_hba_active(struct ufs_hba *hba);
 static inline void ufshcd_hba_stop(struct ufs_hba *hba);
 static int ufshcd_hba_enable(struct ufs_hba *hba);
+
+int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+		     const char *prefix)
+{
+	u32 *regs;
+	size_t pos;
+
+	if (offset % 4 != 0 || len % 4 != 0) /* keep readl happy */
+		return -EINVAL;
+
+	regs = kzalloc(len, GFP_KERNEL);
+	if (!regs)
+		return -ENOMEM;
+
+	for (pos = 0; pos < len; pos += 4) {
+		if (offset == 0 &&
+		    pos >= REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER &&
+		    pos <= REG_UIC_ERROR_CODE_DME)
+			continue;
+		regs[pos / 4] = ufshcd_readl(hba, offset + pos);
+	}
+
+	ufshcd_hex_dump(prefix, regs, len);
+	kfree(regs);
+
+	return 0;
+}
+
+void ufshcd_print_tr(struct ufs_hba *hba, int tag, bool pr_prdt)
+{
+	int prdt_length;
+	struct utp_transfer_req_desc *req_desc = hba->utrdl;
+
+	dev_info(hba->dev,
+		"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
+		tag, (u64)hba->utrdl);
+
+	ufshcd_hex_dump("UPIU TRD: ", hba->utrdl,
+			sizeof(struct utp_transfer_req_desc));
+	dev_info(hba->dev, "UPIU[%d] - Request UPIU phys@0x%llx\n", tag,
+		(u64)hba->ucd_req_ptr);
+	ufshcd_hex_dump("UPIU REQ: ", hba->ucd_req_ptr,
+			sizeof(struct utp_upiu_req));
+	dev_info(hba->dev, "UPIU[%d] - Response UPIU phys@0x%llx\n", tag,
+		(u64)hba->ucd_rsp_ptr);
+	ufshcd_hex_dump("UPIU RSP: ", hba->ucd_rsp_ptr,
+			sizeof(struct utp_upiu_rsp));
+
+	prdt_length = le16_to_cpu(req_desc->prd_table_length);
+
+	dev_info(hba->dev,
+		"UPIU[%d] - PRDT - %d entries  phys@0x%llx\n",
+		tag, prdt_length,
+		(u64)hba->ucd_prdt_ptr);
+
+	if (pr_prdt)
+		ufshcd_hex_dump("UPIU PRDT: ", hba->ucd_prdt_ptr,
+			sizeof(struct ufshcd_sg_entry) * prdt_length);
+}
+
+void ufshcd_dbg_register_dump(struct ufs_hba *hba)
+{
+	ufshcd_ops_dbg_register_dump(hba);
+}
 
 /*
  * ufshcd_wait_for_register - wait for register value to change
