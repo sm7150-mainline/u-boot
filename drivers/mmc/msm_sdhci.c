@@ -217,19 +217,21 @@ static int msm_sdc_remove(struct udevice *dev)
 
 static int msm_of_to_plat(struct udevice *dev)
 {
-	struct udevice *parent = dev->parent;
 	struct msm_sdhc *priv = dev_get_priv(dev);
 	struct sdhci_host *host = &priv->host;
-	int node = dev_of_offset(dev);
+	int ret;
 
 	host->name = strdup(dev->name);
 	host->ioaddr = dev_read_addr_ptr(dev);
-	host->bus_width = fdtdec_get_int(gd->fdt_blob, node, "bus-width", 4);
-	host->index = fdtdec_get_uint(gd->fdt_blob, node, "index", 0);
-	priv->base = (void *)fdtdec_get_addr_size_auto_parent(gd->fdt_blob,
-			dev_of_offset(parent), node, "reg", 1, NULL, false);
-	if (priv->base == (void *)FDT_ADDR_T_NONE ||
-	    host->ioaddr == (void *)FDT_ADDR_T_NONE)
+	ret = dev_read_u32(dev, "bus-width", &host->bus_width);
+	if (ret)
+		host->bus_width = 4;
+	ret = dev_read_u32(dev, "index", &host->index);
+	if (ret)
+		host->bus_width = 0;
+	priv->base = dev_read_addr_index_ptr(dev, 1);
+
+	if (host->ioaddr == (void *)FDT_ADDR_T_NONE)
 		return -EINVAL;
 
 	return 0;
