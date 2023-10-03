@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0
-
 / {
 	/* When running as the primary bootloader there is no prior
 	 * stage to populate the memory layout for us. We *should*
@@ -13,12 +11,10 @@
 	};
 };
 
-/* This is not supported */
 &sdhc_2 {
 	status = "disabled";
 };
 
-/* This is usually OTG but U-Boot doesn't support that properly */
 &usb_dwc3 {
 	dr_mode = "host";
 };
