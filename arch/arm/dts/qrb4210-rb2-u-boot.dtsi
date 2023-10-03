@@ -1,0 +1,31 @@
+
+/ {
+	/* When running as the primary bootloader there is no prior
+	 * stage to populate the memory layout for us. We *should*
+	 * have two nodes here, but ABL does NOT like that.
+	 * sooo we're stuck with this.
+	 */
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0 0x40000000 0 0x3EB00000>,
+		      <0 0x80000000 0 0x40000000>;
+	};
+};
+
+&sdhc_1 {
+	/* Remove rpmcc clocks */
+	clocks = <&gcc GCC_SDCC1_AHB_CLK>,
+		 <&gcc GCC_SDCC1_APPS_CLK>,
+		 <&gcc GCC_SDCC1_ICE_CORE_CLK>;
+	clock-names = "iface", "core", "ice";
+
+	clock-frequency = <384000000>;
+};
+
+&sdhc_2 {
+	status = "disabled";
+};
+
+&usb_dwc3 {
+	dr_mode = "host";
+};
