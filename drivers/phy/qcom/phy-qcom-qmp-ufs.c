@@ -906,9 +906,6 @@ static int qmp_ufs_probe_generic_child(struct udevice *dev,
 			qmp->pcs_misc = NULL;
 	}
 
-	if (!qmp->pcs_misc)
-		dev_warn(qmp->dev, "PHY pcs_misc-reg not used\n");
-
 	return 0;
 }
 
