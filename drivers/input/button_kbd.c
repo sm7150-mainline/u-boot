@@ -75,7 +75,7 @@ int button_read_keys(struct input_config *input)
 		if (state_changed) {
 			debug("%s: %d\n", uc_plat->label, code);
 			priv->old_state[i] = state;
-			input_add_keycode(input, code, state);
+			input_add_keycode(input, code, !state);
 		}
 		i++;
 	}
