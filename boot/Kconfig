@@ -454,6 +454,14 @@ config BOOTSTD_PROG
 	  Note: This currently has many limitations and is not a useful booting
 	  solution. Future work will eventually make this a viable option.
 
+config BOOTSTD_IGNORE_BOOTABLE
+	bool "Don't rely on the bootable flag when scanning bootflows"
+	help
+	  Enable this to avoid relying on the bootable partition flag. On some
+	  devices with complicated partition tables this flag may be set by mistake
+	  resulting in bootflows not being recognised. Set this to always scan all
+	  partitions.
+
 config BOOTMETH_GLOBAL
 	bool
 	help

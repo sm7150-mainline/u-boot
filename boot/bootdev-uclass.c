@@ -27,7 +27,7 @@ enum {
 	 * have. Note that for disks this limits the partitions numbers that
 	 * are scanned to 1..MAX_BOOTFLOWS_PER_BOOTDEV
 	 */
-	MAX_PART_PER_BOOTDEV	= 30,
+	MAX_PART_PER_BOOTDEV	= 96,
 
 	/* Maximum supported length of the "boot_targets" env string */
 	BOOT_TARGETS_MAX_LEN	= 100,
@@ -174,6 +174,8 @@ int bootdev_find_in_blk(struct udevice *dev, struct udevice *blk,
 
 	if (iter->flags & BOOTFLOWIF_SINGLE_PARTITION) {
 		/* a particular partition was specified, scan it without checking */
+	} else if (IS_ENABLED(CONFIG_BOOTSTD_IGNORE_BOOTABLE)) {
+		/* allow any partition to be scanned, by skipping any checks */
 	} else if (!iter->part) {
 		/* This is the whole disk, check if we have bootable partitions */
 		iter->first_bootable = part_get_bootable(desc);
