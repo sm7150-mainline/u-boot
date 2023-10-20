@@ -10,6 +10,7 @@
 #include <dm/device.h>
 #include <dm/root.h>
 #include <dm/device-internal.h>
+#include <dm/uclass-internal.h>
 #include <linux/clk-provider.h>
 #endif
 
@@ -102,6 +103,36 @@ static int do_clk_dump(struct cmd_tbl *cmdtp, int flag, int argc,
 	return ret;
 }
 
+static int do_clk_debug(struct cmd_tbl *cmdtp, int flag, int argc,
+		       char *const argv[])
+{
+	int ret;
+	struct udevice *dev;
+
+	for (ret = 0; ret < argc; ret++) {
+		printf("%s ", argv[ret]);
+	}
+	printf("\n\n");
+
+	if (argc < 2) {
+		printf("clk debug <device>\n");
+		return 0;
+	}
+
+	ret = uclass_find_device_by_name(UCLASS_CLK, argv[1], &dev);
+	if (ret < 0) {
+		ret = uclass_find_device_by_seq(UCLASS_CLK, dectoul(argv[1], NULL), &dev);
+		if (ret < 0) {
+			printf("Can't find device '%s'\n", argv[1]);
+			return ret;
+		}
+	}
+
+	clk_debug_clks(dev, argc-1, argv+1);
+
+	return ret;
+}
+
 #if CONFIG_IS_ENABLED(DM) && CONFIG_IS_ENABLED(CLK)
 static int do_clk_setfreq(struct cmd_tbl *cmdtp, int flag, int argc,
 			  char *const argv[])
@@ -136,6 +167,9 @@ static int do_clk_setfreq(struct cmd_tbl *cmdtp, int flag, int argc,
 
 static struct cmd_tbl cmd_clk_sub[] = {
 	U_BOOT_CMD_MKENT(dump, 1, 1, do_clk_dump, "", ""),
+	U_BOOT_CMD_MKENT(debug, CONFIG_SYS_MAXARGS, 1, do_clk_debug,
+		"debug <device name> [args...]",
+		"Call the debug handler for the given clock device"),
 #if CONFIG_IS_ENABLED(DM) && CONFIG_IS_ENABLED(CLK)
 	U_BOOT_CMD_MKENT(setfreq, 3, 1, do_clk_setfreq, "", ""),
 #endif
@@ -163,6 +197,7 @@ static int do_clk(struct cmd_tbl *cmdtp, int flag, int argc,
 
 U_BOOT_LONGHELP(clk,
 	"dump - Print clock frequencies\n"
+	"debug - invoke platform specific debug commands\n"
 	"clk setfreq [clk] [freq] - Set clock frequency");
 
-U_BOOT_CMD(clk, 4, 1, do_clk, "CLK sub-system", clk_help_text);
+U_BOOT_CMD(clk, CONFIG_SYS_MAXARGS, 1, do_clk, "CLK sub-system", clk_help_text);
