@@ -40,6 +40,7 @@ struct clk_ops {
 	int (*disable)(struct clk *clk);
 #if IS_ENABLED(CONFIG_CMD_CLK)
 	void (*dump)(struct udevice *dev);
+	void (*debug_clks)(struct udevice *dev, int argc, char *const argv[]);
 #endif
 };
 

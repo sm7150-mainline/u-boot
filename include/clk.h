@@ -523,6 +523,8 @@ int clk_enable_bulk(struct clk_bulk *bulk);
  */
 int clk_disable(struct clk *clk);
 
+void clk_debug_clks(struct udevice *dev, int argc, char *const argv[]);
+
 /**
  * clk_disable_bulk() - Disable (turn off) all clocks in a clock bulk struct.
  * @bulk:	A clock bulk struct that was previously successfully requested
