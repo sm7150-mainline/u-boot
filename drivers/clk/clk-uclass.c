@@ -654,6 +654,19 @@ int clk_enable(struct clk *clk)
 	return 0;
 }
 
+#if IS_ENABLED(CONFIG_CMD_CLK)
+void clk_debug_clks(struct udevice *dev, int argc, char *const argv[])
+{
+	const struct clk_ops *ops;
+
+	ops = clk_dev_ops(dev);
+	if (ops && ops->debug_clks)
+		ops->debug_clks(dev, argc, argv);
+	else
+		printf("No debug op for %s\n", dev->name);
+}
+#endif
+
 int clk_enable_bulk(struct clk_bulk *bulk)
 {
 	int i, ret;
