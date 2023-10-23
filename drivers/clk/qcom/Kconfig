@@ -73,4 +73,15 @@ config CLK_QCOM_SM8250
 
 endmenu
 
+config CLK_QCOM_DEBUG
+	bool "Enable Qualcomm clock debugging"
+	depends on ARCH_SNAPDRAGON
+	select CMD_CLK
+	help
+	  Enable support for debugging the Qualcomm Global Clock
+	  Controller on supported platforms. The hardware implements
+	  the ability to measure the output rates of most clocks, so
+	  that clock configurations can be validated. Use the "clk debug"
+	  command.
+
 endif
