@@ -28,6 +28,8 @@
 
 #include "clock-qcom.h"
 
+#include "debugcc/debugcc.h"
+
 /* CBCR register fields */
 #define CBCR_BRANCH_ENABLE_BIT  BIT(0)
 #define CBCR_BRANCH_OFF_BIT     BIT(31)
@@ -350,11 +352,22 @@ static void __maybe_unused msm_dump_clks(struct udevice *dev)
 	dump_rcgs(dev);
 }
 
+static void msm_debug_clks(struct udevice *dev, int argc, char *const argv[])
+{
+	if (!IS_ENABLED(CONFIG_CLK_QCOM_DEBUG)) {
+		printf("Enable CONFIG_CLK_QCOM_DEBUG to debug GCC\n");
+		return;
+	}
+
+	qcom_debugcc_run(argc, argv);
+}
+
 static struct clk_ops msm_clk_ops = {
 	.set_rate = msm_clk_set_rate,
 	.enable = msm_clk_enable,
 #if IS_ENABLED(CONFIG_CMD_CLK)
 	.dump = msm_dump_clks,
+	.debug_clks = msm_debug_clks,
 #endif
 };
 
