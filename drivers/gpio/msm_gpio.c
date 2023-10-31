@@ -57,6 +57,9 @@ static void msm_gpio_direction_input(struct udevice *dev, unsigned int gpio)
 {
 	struct msm_gpio_bank *priv = dev_get_priv(dev);
 
+	if (qcom_pinctrl_is_reserved(dev_get_parent(dev), gpio))
+		return;
+
 	if (qcom_is_special_pin(priv->pin_data, gpio))
 		msm_gpio_direction_input_special(priv, gpio);
 
@@ -91,6 +94,9 @@ static int msm_gpio_set_value_special(struct msm_gpio_bank *priv,
 static int msm_gpio_set_value(struct udevice *dev, unsigned int gpio, int value)
 {
 	struct msm_gpio_bank *priv = dev_get_priv(dev);
+
+	if (qcom_pinctrl_is_reserved(dev_get_parent(dev), gpio))
+		return 0;
 
 	if (qcom_is_special_pin(priv->pin_data, gpio))
 		return msm_gpio_set_value_special(priv, gpio, value);
@@ -135,6 +141,9 @@ static int msm_gpio_direction_output(struct udevice *dev, unsigned int gpio,
 				     int value)
 {
 	struct msm_gpio_bank *priv = dev_get_priv(dev);
+
+	if (qcom_pinctrl_is_reserved(dev_get_parent(dev), gpio))
+		return 0;
 
 	if (qcom_is_special_pin(priv->pin_data, gpio))
 		return msm_gpio_direction_output_special(priv, gpio, value);
@@ -186,6 +195,9 @@ static int msm_gpio_get_value(struct udevice *dev, unsigned int gpio)
 {
 	struct msm_gpio_bank *priv = dev_get_priv(dev);
 
+	if (qcom_pinctrl_is_reserved(dev_get_parent(dev), gpio))
+		return 0;
+
 	if (qcom_is_special_pin(priv->pin_data, gpio))
 		return msm_gpio_get_value_special(priv, gpio);
 
@@ -197,8 +209,9 @@ static int msm_gpio_get_function(struct udevice *dev, unsigned int gpio)
 	struct msm_gpio_bank *priv = dev_get_priv(dev);
 
 	/* Always NOP for special pins, assume they're in the correct state */
-	if (qcom_is_special_pin(priv->pin_data, gpio))
-		return 0;
+	if (qcom_is_special_pin(priv->pin_data, gpio) ||
+	    qcom_pinctrl_is_reserved(dev_get_parent(dev), gpio))
+		return GPIOF_UNKNOWN;
 
 	if (readl(priv->base + GPIO_CONFIG_REG(dev, gpio)) & GPIO_OE_ENABLE)
 		return GPIOF_OUTPUT;
