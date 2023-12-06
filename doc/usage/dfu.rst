@@ -167,6 +167,36 @@ mmc
     Please note that this means the user will be able to execute any
     arbitrary commands just like in the u-boot's shell.
 
+scsi
+    for UFS storage::
+
+        dfu 0 scsi <dev>
+
+    each element in *dfu_alt_info* being
+
+    * <name> raw <offset> <size>     raw access to SCSI LUN
+    * <name> part <part_id>          raw access to partition
+    * <name> fat <part_id>           file in FAT partition
+    * <name> ext4 <part_id>          file in EXT4 partition
+    * <name> skip 0 0                ignore flashed data
+    * <name> script 0 0              execute commands in shell
+
+    with
+
+    size
+        is the size of the access area (hexadecimal without "0x")
+        or 0 which means whole device
+    partid
+        is the GPT or DOS partition index.
+    dev
+        is the SCSI LU (Logical Unit) index (decimal only)
+
+    A value of environment variable *dfu_alt_info* for UFS could be::
+
+        u-boot part 4;bl2 raw 0x1e 0x1d
+
+    See mmc section above for details on the skip and script types.
+
 nand
     raw slc nand device::
 
@@ -278,6 +308,7 @@ alternate list separated by '&' with the same format for each <alt>::
     mmc <dev>=<alt1>;....;<altN>
     nand <dev>=<alt1>;....;<altN>
     ram <dev>=<alt1>;....;<altN>
+    scsi <dev>=<alt1>;....;<altN>
     sf <dev>=<alt1>;....;<altN>
     mtd <dev>=<alt1>;....;<altN>
     virt <dev>=<alt1>;....;<altN>
