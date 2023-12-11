@@ -21,6 +21,9 @@ static enum button_state_t button_gpio_get_state(struct udevice *dev)
 	struct button_gpio_priv *priv = dev_get_priv(dev);
 	int ret;
 
+	if (!priv)
+		return -ENODATA;
+
 	if (!dm_gpio_is_valid(&priv->gpio))
 		return -EREMOTEIO;
 	ret = dm_gpio_get_value(&priv->gpio);
@@ -33,6 +36,8 @@ static enum button_state_t button_gpio_get_state(struct udevice *dev)
 static int button_gpio_get_code(struct udevice *dev)
 {
 	struct button_gpio_priv *priv = dev_get_priv(dev);
+	if (!priv)
+		return -ENODATA;
 	int code = priv->linux_code;
 
 	if (!code)
@@ -52,7 +57,7 @@ static int button_gpio_probe(struct udevice *dev)
 		return 0;
 
 	ret = gpio_request_by_name(dev, "gpios", 0, &priv->gpio, GPIOD_IS_IN);
-	if (ret)
+	if (ret || !dm_gpio_is_valid(&priv->gpio))
 		return ret;
 
 	ret = dev_read_u32(dev, "linux,code", &priv->linux_code);
@@ -99,6 +104,8 @@ static int button_gpio_bind(struct udevice *parent)
 			return ret;
 		uc_plat = dev_get_uclass_plat(dev);
 		uc_plat->label = label;
+		printf("Button '%s' bound to driver '%s'\n", label,
+		       dev->driver->name);
 	}
 
 	return 0;
