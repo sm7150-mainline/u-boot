@@ -52,6 +52,7 @@ void fastboot_response(const char *tag, char *response,
 			  FASTBOOT_RESPONSE_LEN - strlen(response) - 1,
 			  format, args);
 		va_end(args);
+		debug("## FASTBOOT: %s\n", response);
 	}
 }
 
@@ -74,10 +75,11 @@ void fastboot_fail(const char *reason, char *response)
  */
 void fastboot_okay(const char *reason, char *response)
 {
-	if (reason)
+	if (reason) {
 		fastboot_response("OKAY", response, "%s", reason);
-	else
+	} else {
 		fastboot_response("OKAY", response, NULL);
+	}
 }
 
 /**

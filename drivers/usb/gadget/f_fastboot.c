@@ -537,6 +537,7 @@ static void rx_handler_command(struct usb_ep *ep, struct usb_request *req)
 
 	if (req->actual < req->length) {
 		cmdbuf[req->actual] = '\0';
+		debug("## FASTBOOT: %s\n", cmdbuf);
 		cmd = fastboot_handle_command(cmdbuf, response);
 	} else {
 		pr_err("buffer overflow\n");
