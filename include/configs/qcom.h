@@ -21,7 +21,7 @@
 	"stdin=serial,button-kbd\0"	\
 	"stdout=serial,vidconsole\0"	\
 	"stderr=serial,vidconsole\0" \
-	"preboot=true || usb start\0" \
+	"preboot=usb start\0" \
 	"fastboot=fastboot -l $fastboot_addr_r usb 0\0" \
 	"bootmenu_0=Boot first available device=bootflow scan -b\0" \
 	"bootmenu_1=Enable USB mass storage=ums 0 scsi 0,1,2,3,4,5\0" \
