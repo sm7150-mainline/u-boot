@@ -92,7 +92,7 @@ efi_status_t efi_query_variable_info_int(u32 attributes,
 					 u64 *remaining_variable_storage_size,
 					 u64 *maximum_variable_size);
 
-#define EFI_VAR_FILE_NAME "ubootefi.var"
+#define EFI_VAR_FILE_NAME "/ubootefi.var"
 
 #define EFI_VAR_BUF_SIZE CONFIG_EFI_VAR_BUF_SIZE
 
