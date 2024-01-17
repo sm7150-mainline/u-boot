@@ -610,7 +610,7 @@ static int usb_find_and_bind_driver(struct udevice *parent,
 		device_set_name_alloced(*devp);
 
 error:
-	debug("%s: No match found: %d\n", __func__, ret);
+	debug("%s: No match found for %#4x:%#4x: %d\n", __func__, desc->idVendor, desc->idProduct, ret);
 	return ret;
 }
 
