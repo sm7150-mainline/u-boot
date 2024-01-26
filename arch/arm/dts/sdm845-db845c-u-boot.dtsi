@@ -1,5 +1,22 @@
 // SPDX-License-Identifier: GPL-2.0
 
+/ {
+	chosen {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		framebuffer: framebuffer@9d400000 {
+			compatible = "simple-framebuffer";
+			reg = <0 0x9d400000 0 0x2400000>;
+			width = <1920>;
+			height = <1080>;
+			stride = <(1920 * 4)>;
+			format = "a8r8g8b8";
+		};
+	};
+};
+
 /* Needed for Linux to boot from USB, otherwise if PCIe driver is not in initramfs
  * the VBUS supply will never get turned on.
  * https://lore.kernel.org/linux-arm-msm/20240320122515.3243711-1-caleb.connolly@linaro.org/
