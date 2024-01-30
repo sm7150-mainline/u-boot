@@ -11,6 +11,7 @@ config USB_DWC3_GADGET
 	bool "USB Gadget support for DWC3"
 	default y
 	depends on USB_GADGET
+	select DM_USB_GADGET
 	select USB_GADGET_DUALSPEED
 
 comment "Platform Glue Driver Support"
