@@ -480,7 +480,7 @@ void enable_caches(void)
 
 	carveout_start = get_timer(0);
 	/* Takes ~20-50ms on SDM845 */
-	carve_out_reserved_memory();
+	//carve_out_reserved_memory();
 	debug("carveout time: %lums\n", get_timer(carveout_start));
 
 	dcache_enable();
