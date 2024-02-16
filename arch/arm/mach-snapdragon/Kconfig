@@ -12,7 +12,7 @@ config SYS_VENDOR
 	  will be used as the custom board directory.
 
 config SYS_MALLOC_F_LEN
-	default 0x2000
+	default 0x20000
 
 config SPL_SYS_MALLOC_F
 	default y
