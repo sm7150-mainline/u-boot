@@ -167,7 +167,7 @@ static int qcom_snps_hsphy_phy_probe(struct udevice *dev)
 		return PTR_ERR(priv->base);
 
 	ret = clk_get_bulk(dev, &priv->clks);
-	if (ret < 0 && ret != -ENOENT) {
+	if (ret < 0 && ret != -ENOENT && ret != -ENODEV) {
 		printf("%s: Failed to get clocks %d\n", __func__, ret);
 		return ret;
 	}
