@@ -711,22 +711,30 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
 static int ufshcd_memory_alloc(struct ufs_hba *hba)
 {
 	/* Allocate one Transfer Request Descriptor
-	 * Should be aligned to 1k boundary.
+	 * Should be aligned to 4k boundary.
 	 */
-	hba->utrdl = memalign(1024, sizeof(struct utp_transfer_req_desc));
+	hba->utrdl = memalign(4096, sizeof(struct utp_transfer_req_desc));
 	if (!hba->utrdl) {
 		dev_err(hba->dev, "Transfer Descriptor memory allocation failed\n");
 		return -ENOMEM;
 	}
 
+	mmu_set_region_dcache_behaviour((phys_addr_t)hba->utrdl,
+					ALIGN(sizeof(struct utp_transfer_req_desc), 4096),
+					DCACHE_WRITETHROUGH);
+
 	/* Allocate one Command Descriptor
-	 * Should be aligned to 1k boundary.
+	 * Should be aligned to 4k boundary.
 	 */
-	hba->ucdl = memalign(1024, sizeof(struct utp_transfer_cmd_desc));
+	hba->ucdl = memalign(4096, sizeof(struct utp_transfer_cmd_desc));
 	if (!hba->ucdl) {
 		dev_err(hba->dev, "Command descriptor memory allocation failed\n");
 		return -ENOMEM;
 	}
+
+	mmu_set_region_dcache_behaviour((phys_addr_t)hba->ucdl,
+					ALIGN(sizeof(struct utp_transfer_cmd_desc), 4096),
+					DCACHE_WRITETHROUGH);
 
 	return 0;
 }
