@@ -526,16 +526,6 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
 		{UFS_HS_G3, 0x92},
 	};
 
-	/*
-	 * The Qunipro controller does not use following registers:
-	 * SYS1CLK_1US_REG, TX_SYMBOL_CLK_1US_REG, CLK_NS_REG &
-	 * UFS_REG_PA_LINK_STARTUP_TIMER
-	 * But UTP controller uses SYS1CLK_1US_REG register for Interrupt
-	 * Aggregation logic.
-	*/
-	if (ufs_qcom_cap_qunipro(priv))
-		return 0;
-
 	if (gear == 0) {
 		dev_err(hba->dev, "%s: invalid gear = %d\n", __func__, gear);
 		return -EINVAL;
@@ -544,21 +534,21 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
 	core_clk_rate = clk_get_rate(priv->core_clk);
 
 	/* If frequency is smaller than 1MHz, set to 1MHz */
-	if (core_clk_rate < DEFAULT_CLK_RATE_HZ)
+	if (core_clk_rate < DEFAULT_CLK_RATE_HZ || IS_ERR_VALUE(core_clk_rate))
 		core_clk_rate = DEFAULT_CLK_RATE_HZ;
+
+	debug("%s: core_clk_rate: %lu\n", __func__, core_clk_rate);
 
 	core_clk_cycles_per_us = core_clk_rate / USEC_PER_SEC;
 	if (ufshcd_readl(hba, REG_UFS_SYS1CLK_1US) != core_clk_cycles_per_us) {
 		ufshcd_writel(hba, core_clk_cycles_per_us, REG_UFS_SYS1CLK_1US);
+		ufshcd_readl(hba, REG_UFS_SYS1CLK_1US);
 		/*
 		 * make sure above write gets applied before we return from
 		 * this function.
 		 */
 		mb();
 	}
-
-	if (ufs_qcom_cap_qunipro(priv))
-		return 0;
 
 	core_clk_period_in_ns = NSEC_PER_SEC / core_clk_rate;
 	core_clk_period_in_ns <<= OFFSET_CLK_NS_REG;
@@ -683,8 +673,8 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
 
 	switch (status) {
 	case PRE_CHANGE:
-		if (ufs_qcom_cfg_timers(hba, UFS_PWM_G1, SLOWAUTO_MODE,
-					0, true)) {
+		if (ufs_qcom_cfg_timers(hba, UFS_HS_G3, FAST_MODE,
+					PA_HS_MODE_B, true)) {
 			dev_err(hba->dev, "%s: ufs_qcom_cfg_timers() failed\n",
 				__func__);
 			return -EINVAL;
@@ -696,7 +686,7 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
 			 * divider
 			 */
 			err = ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba,
-									  150);
+									  300);
 
 		/*
 		 * Some UFS devices (and may be host) have issues if LCC is
