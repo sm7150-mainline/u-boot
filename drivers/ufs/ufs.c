@@ -1743,6 +1743,9 @@ static int ufshcd_get_max_pwr_mode(struct ufs_hba *hba)
 		pwr_info->pwr_tx = SLOW_MODE;
 	}
 
+	pwr_info->gear_rx = UFS_HS_G3;
+	pwr_info->gear_tx = UFS_HS_G3;
+
 	hba->max_pwr_info.is_valid = true;
 	return ufshcd_ops_get_max_pwr_mode(hba, &hba->max_pwr_info);
 }
