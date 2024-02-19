@@ -380,6 +380,11 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
 		return ret;
 	}
 
+	// ufshcd_rmwl(hba, UFS_PHY_SOFT_RESET, UFS_PHY_SOFT_RESET, REG_UFS_CFG1);
+	// udelay(1100);
+	ufshcd_rmwl(hba, UFS_PHY_SOFT_RESET, 0, REG_UFS_CFG1);
+	udelay(1100);
+
 	/* power on phy */
 	ret = generic_phy_power_on(&phy);
 	if (ret) {
