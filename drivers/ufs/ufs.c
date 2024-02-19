@@ -916,6 +916,22 @@ static int ufshcd_comp_devman_upiu(struct ufs_hba *hba,
 	return ret;
 }
 
+static void ufshcd_dump_uic_error(struct ufs_hba *hba)
+{
+	u32 val;
+
+	val = ufshcd_readl(hba, REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
+	debug("UIC phy adapter layer error: 0x%x\n", val);
+	val = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
+	debug("UIC data link layer error: 0x%x\n", val);
+	val = ufshcd_readl(hba, REG_UIC_ERROR_CODE_NETWORK_LAYER);
+	debug("UIC network layer error: 0x%x\n", val);
+	val = ufshcd_readl(hba, REG_UIC_ERROR_CODE_TRANSPORT_LAYER);
+	debug("UIC transport layer error: 0x%x\n", val);
+	val = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DME);
+	debug("UIC DME error: 0x%x\n", val);
+}
+
 static int ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
 {
 	unsigned long start;
@@ -945,6 +961,10 @@ static int ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
 				enabled_intr_status);
 
 			return -1;
+		}
+		if (intr_status & UIC_ERROR) {
+			dev_err(hba->dev, "UIC error\n");
+			ufshcd_dump_uic_error(hba);
 		}
 	} while (!(enabled_intr_status & UTP_TRANSFER_REQ_COMPL));
 
