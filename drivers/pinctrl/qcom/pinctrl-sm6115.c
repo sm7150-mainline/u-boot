@@ -6,6 +6,7 @@
  *
  */
 
+#include "asm/io.h"
 #include <common.h>
 #include <dm.h>
 
@@ -181,12 +182,51 @@ static unsigned int sm6115_get_function_mux(__maybe_unused unsigned int pin, uns
 	return msm_pinctrl_functions[selector].val;
 }
 
+#define SDC1_CTL_REG	(WEST + 0x75000)
+
+static int sm6115_pinctrl_probe(struct udevice *dev)
+{
+	void *base = dev_read_addr_ptr(dev);
+	u32 val;
+
+	if (!base)
+		return -EINVAL;
+
+	val = readl(base + SDC1_CTL_REG);
+	printf("SDC1_CTL_REG: R: 0x%08x ", val);
+	/* sdc1_rclk pull down, don't set drive */
+	val &= ~(0x3 << 15);
+	val |= (1 << 15);
+	/* sdc1_clk no bias */
+	val &= ~(0x3 << 13);
+	/* drive 16 */
+	val |= (0x7 << 6); /* val = (drive / 2) - 1 */
+	/* sdc1_cmd pull up drive 10 */
+	val |= (0x3 << 11); /* set all bits for pull up */
+	/* drive 10 */
+	val &= ~(0x7 << 3);
+	val |= (0x4 << 3);
+	/* sdc1_data pull up drive 10 */
+	val &= ~(0x3 << 9);
+	val |= (0x3 << 9);
+	/* drive 10 */
+	val &= ~(0x7 << 0);
+	val |= (0x4 << 0);
+	printf("W: 0x%08x\n", val);
+	writel(val, base + SDC1_CTL_REG);
+
+	msm_pinctrl_probe(dev);
+
+	return 0;
+}
+
 struct msm_pinctrl_data sm6115_data = {
 	.pin_data = {
 		.pin_offsets = sm6115_pin_offsets,
 		.pin_count = ARRAY_SIZE(sm6115_pin_offsets),
 		.special_pins_start = 113,
 	},
+	.own_probe = true,
 	.functions_count = ARRAY_SIZE(msm_pinctrl_functions),
 	.get_function_name = sm6115_get_function_name,
 	.get_function_mux = sm6115_get_function_mux,
@@ -200,8 +240,10 @@ static const struct udevice_id msm_pinctrl_ids[] = {
 
 U_BOOT_DRIVER(pinctrl_sm6115) = {
 	.name		= "pinctrl_sm6115",
-	.id		= UCLASS_NOP,
+	.id		= UCLASS_PINCTRL,
 	.of_match	= msm_pinctrl_ids,
 	.ops		= &msm_pinctrl_ops,
+	.probe		= sm6115_pinctrl_probe,
 	.bind		= msm_pinctrl_bind,
+	.priv_auto	= sizeof(struct msm_pinctrl_priv),
 };

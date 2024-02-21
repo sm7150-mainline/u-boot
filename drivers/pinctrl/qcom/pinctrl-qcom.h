@@ -16,6 +16,7 @@ struct udevice;
 struct msm_pinctrl_data {
 	struct msm_pin_data pin_data;
 	int functions_count;
+	bool own_probe;
 	const char *(*get_function_name)(struct udevice *dev,
 					 unsigned int selector);
 	unsigned int (*get_function_mux)(unsigned int pin,
@@ -29,8 +30,14 @@ struct pinctrl_function {
 	int val;
 };
 
+struct msm_pinctrl_priv {
+	phys_addr_t base;
+	struct msm_pinctrl_data *data;
+};
+
 extern struct pinctrl_ops msm_pinctrl_ops;
 
+int msm_pinctrl_probe(struct udevice *dev);
 int msm_pinctrl_bind(struct udevice *dev);
 
 #endif

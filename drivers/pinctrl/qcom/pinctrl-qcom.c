@@ -21,11 +21,6 @@
 
 #include "pinctrl-qcom.h"
 
-struct msm_pinctrl_priv {
-	phys_addr_t base;
-	struct msm_pinctrl_data *data;
-};
-
 #define GPIO_CONFIG_REG(priv, x) \
 	(qcom_pin_offset((priv)->data->pin_data.pin_offsets, x))
 
@@ -62,7 +57,7 @@ static const char *msm_get_function_name(struct udevice *dev,
 	return priv->data->get_function_name(dev, selector);
 }
 
-static int msm_pinctrl_probe(struct udevice *dev)
+int msm_pinctrl_probe(struct udevice *dev)
 {
 	struct msm_pinctrl_priv *priv = dev_get_priv(dev);
 
@@ -148,14 +143,16 @@ int msm_pinctrl_bind(struct udevice *dev)
 	if (!data->pin_data.special_pins_start)
 		dev_warn(dev, "Special pins start index not defined!\n");
 
-	drv = lists_driver_lookup_name("pinctrl_qcom");
-	if (!drv)
-		return -ENOENT;
+	if (!data->own_probe) {
+		drv = lists_driver_lookup_name("pinctrl_qcom");
+		if (!drv)
+			return -ENOENT;
 
-	ret = device_bind_with_driver_data(dev_get_parent(dev), drv, ofnode_get_name(node), (ulong)data,
-					   dev_ofnode(dev), &pinctrl_dev);
-	if (ret)
-		return ret;
+		ret = device_bind_with_driver_data(dev_get_parent(dev), drv, ofnode_get_name(node), (ulong)data,
+						dev_ofnode(dev), &pinctrl_dev);
+		if (ret)
+			return ret;
+	}
 
 	ofnode_get_property(node, "gpio-controller", &ret);
 	if (ret < 0)
