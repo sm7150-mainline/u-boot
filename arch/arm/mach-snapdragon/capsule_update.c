@@ -93,6 +93,22 @@ static int find_boot_partition(const char *partname, struct blk_desc *blk_dev, s
 	return 0;
 }
 
+void qcom_set_serialno(void)
+{
+	const char *cmdline = get_cmdline();
+	char serial[32];
+
+	if (!cmdline) {
+		debug("Failed to get bootargs\n");
+		return;
+	}
+
+	get_cmdline_option(cmdline, "androidboot.serialno=", serial, sizeof(serial));
+	if (serial[0] != '\0') {
+		env_set("serial#", serial);
+	}
+}
+
 /**
  * qcom_configure_capsule_updates() - Configure the DFU string for capsule updates
  *

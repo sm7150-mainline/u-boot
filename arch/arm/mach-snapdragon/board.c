@@ -270,6 +270,8 @@ static void configure_env(void)
 	snprintf(dt_path, sizeof(dt_path), "qcom/%s-%s.dtb",
 		 env_get("soc"), env_get("board"));
 	env_set("fdtfile", dt_path);
+
+	qcom_set_serialno();
 }
 
 void __weak qcom_late_init(void)
