@@ -132,7 +132,7 @@ void qcom_configure_capsule_updates(void)
 	const char *cmdline;
 	char partname[7] = "boot";
 
-#ifdef CONFIG_DM_SCSI
+#ifdef CONFIG_SCSI
 	/* Scan for SCSI devices */
 	ret = scsi_scan(false);
 	if (ret) {
