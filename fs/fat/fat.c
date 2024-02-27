@@ -647,11 +647,10 @@ static int get_fs_info(fsdata *mydata)
 
 	mydata->sect_size = get_unaligned_le16(bs.sector_size);
 	mydata->clust_size = bs.cluster_size;
-	if (mydata->sect_size != cur_part_info.blksz) {
-		log_err("FAT sector size mismatch (fs=%u, dev=%lu)\n",
+	if (mydata->sect_size != cur_part_info.blksz)
+		log_debug("FAT sector size mismatch (fs=%u, dev=%lu)\n",
 			mydata->sect_size, cur_part_info.blksz);
-		return -1;
-	}
+
 	if (mydata->clust_size == 0) {
 		log_err("FAT cluster size not set\n");
 		return -1;
