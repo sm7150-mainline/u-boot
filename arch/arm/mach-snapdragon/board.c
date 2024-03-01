@@ -354,13 +354,15 @@ int board_late_init(void)
 {
 	struct lmb lmb;
 	u32 status = 0;
-	phys_addr_t fdt_addr;
+	phys_addr_t addr;
 	unsigned int el;
 
 	lmb_init_and_reserve(&lmb, gd->bd, (void *)gd->fdt_blob);
 
 	/* We need to be fairly conservative here as we support boards with just 1G of TOTAL RAM */
-	status |= env_set_hex("kernel_addr_r", addr_alloc(&lmb, SZ_128M));
+	addr = addr_alloc(&lmb, SZ_128M);
+	status |= env_set_hex("kernel_addr_r", addr);
+	status |= env_set_hex("loadaddr", addr);
 	status |= env_set_hex("ramdisk_addr_r", addr_alloc(&lmb, SZ_128M));
 	status |= env_set_hex("kernel_comp_addr_r", addr_alloc(&lmb, KERNEL_COMP_SIZE));
 	status |= env_set_hex("kernel_comp_size", KERNEL_COMP_SIZE);
@@ -368,14 +370,14 @@ int board_late_init(void)
 		status |= env_set_hex("fastboot_addr_r", addr_alloc(&lmb, FASTBOOT_BUF_SIZE));
 	status |= env_set_hex("scriptaddr", addr_alloc(&lmb, SZ_4M));
 	status |= env_set_hex("pxefile_addr_r", addr_alloc(&lmb, SZ_4M));
-	fdt_addr = addr_alloc(&lmb, SZ_2M);
-	status |= env_set_hex("fdt_addr_r", fdt_addr);
+	addr = addr_alloc(&lmb, SZ_2M);
+	status |= env_set_hex("fdt_addr_r", addr);
 
 	if (status)
 		log_warning("%s: Failed to set run time variables\n", __func__);
 
 	/* By default copy U-Boots FDT, it will be used as a fallback */
-	memcpy((void *)fdt_addr, (void *)gd->fdt_blob, gd->fdt_size);
+	memcpy((void *)addr, (void *)gd->fdt_blob, gd->fdt_size);
 
 	configure_env();
 	qcom_late_init();
