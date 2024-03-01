@@ -12,3 +12,10 @@
 		      <1 0x80000000 1 0x00000000>;
 	};
 };
+
+/* This regulator must be turned on to enable the 5v VBUS
+ * supply on the USB port.
+ */
+&usb_2_dwc3 {
+	vbus-supply = <&vreg_l11c_3p3>;
+};
