@@ -205,6 +205,8 @@ static const unsigned int sm8250_pin_offsets[] = {
 	[177] = WEST,
 	[178] = WEST,
 	[179] = WEST,
+	// special
+	[183] = 0,
 };
 
 static const char *sm8250_get_function_name(struct udevice *dev,
@@ -229,6 +231,7 @@ static struct msm_pinctrl_data sm8250_data = {
 	.pin_data = {
 		.pin_offsets = sm8250_pin_offsets,
 		.pin_count = ARRAY_SIZE(sm8250_pin_offsets),
+		.special_pins_start = 180,
 	},
 	.functions_count = ARRAY_SIZE(msm_pinctrl_functions),
 	.get_function_name = sm8250_get_function_name,
