@@ -255,6 +255,20 @@ struct device_node *of_find_node_by_prop_value(struct device_node *from,
 					       const char *propname,
 					       const void *propval,
 					       int proplen);
+
+/**
+ * of_find_node_by_prop() - find the next node with a given property
+ *
+ * @from: Node to start searching from or NULL. the node you pass will not be
+ *	searched, only the next one will; typically, you pass what the previous
+ *	call returned.
+ * @propname: property name to check
+ * @prop: pointer to return retrieved property.
+ * Return: node pointer or NULL if not found
+ */
+struct device_node *of_find_node_by_prop(struct device_node *from,
+					 const char *propname, struct property **prop);
+
 /**
  * of_find_node_by_phandle() - Find a node given a phandle
  *

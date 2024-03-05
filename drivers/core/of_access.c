@@ -445,6 +445,21 @@ struct device_node *of_find_node_by_prop_value(struct device_node *from,
 	return np;
 }
 
+struct device_node *of_find_node_by_prop(struct device_node *from,
+					 const char *propname, struct property **prop)
+{
+	struct device_node *np;
+
+	for_each_of_allnodes_from(from, np) {
+		*prop = of_find_property(from, propname, NULL);
+		if (*prop && of_node_get(np))
+			break;
+	}
+	of_node_put(from);
+
+	return np;
+}
+
 struct device_node *of_find_node_by_phandle(struct device_node *root,
 					    phandle handle)
 {
