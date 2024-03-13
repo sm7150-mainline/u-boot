@@ -19,3 +19,6 @@
 &usb_2_dwc3 {
 	vbus-supply = <&vreg_l11c_3p3>;
 };
+
+/* Otherwise IOMMU stuff gets initialised for this and crash */
+/delete-node/ &crypto;
