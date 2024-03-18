@@ -8,10 +8,12 @@
 #include <asm/esr.h>
 #include <asm/global_data.h>
 #include <asm/ptrace.h>
+#include <hexdump.h>
 #include <irq_func.h>
 #include <linux/compiler.h>
 #include <efi_loader.h>
 #include <semihosting.h>
+#include <symbols.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -82,6 +84,53 @@ static void dump_instr(struct pt_regs *regs)
 	printf("\n");
 }
 
+static inline bool is_branch(u64 instr)
+{
+	return (instr & 0x1c000000) == 0x14000000;
+}
+
+struct __packed stack_frame {
+	struct stack_frame *prev_ptr;
+	unsigned long lr;
+	char data[];
+};
+
+static void __unwind_stack(unsigned long x29)
+{
+	char symname[128] = { 0 };
+	unsigned long addr, offset;
+	struct stack_frame *fp;
+
+	fp = (struct stack_frame *)x29;
+	while (fp && fp->prev_ptr > fp) {
+		symbols_lookup(fp->lr, &addr, &offset, symname);
+		printf("\t<%#016lx> %s+%#lx\n", fp->lr, symname, offset);
+		fp = (struct stack_frame *)(u64)fp->prev_ptr;
+	}
+}
+
+void unwind_stack(void)
+{
+	unsigned long x29;
+
+	asm("mov %0, x29" : "=r" (x29));
+
+	__unwind_stack(x29);
+}
+
+static void elr_unwind_stack(struct pt_regs *regs)
+{
+	char symname[128] = { 0 };
+	unsigned long addr, offset;
+
+	printf("Backtrace:\n");
+
+	symbols_lookup(regs->elr, &addr, &offset, symname);
+	printf("\t<%#016lx> %s+%#lx\n", regs->elr, symname, offset);
+
+	__unwind_stack(regs->regs[29]);
+}
+
 void show_regs(struct pt_regs *regs)
 {
 	int i;
@@ -97,6 +146,8 @@ void show_regs(struct pt_regs *regs)
 		       i, regs->regs[i], i+1, regs->regs[i+1]);
 	printf("\n");
 	dump_instr(regs);
+	printf("\n");
+	elr_unwind_stack(regs);
 }
 
 /*
