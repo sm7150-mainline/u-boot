@@ -21,6 +21,7 @@
 	"stdin=serial,button-kbd\0"	\
 	"stdout=serial,vidconsole\0"	\
 	"stderr=serial,vidconsole\0" \
+	"bootfile=/extlinux/extlinux.conf\0" \
 	"preboot=usb start\0" \
 	"fastboot=fastboot -l $fastboot_addr_r usb 0\0" \
 	"do_boot=bootefi bootmgr\0" \
