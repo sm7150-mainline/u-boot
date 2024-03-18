@@ -120,6 +120,7 @@ obj-$(CONFIG_LMB) += lmb.o
 obj-y += membuff.o
 obj-$(CONFIG_REGEX) += slre.o
 obj-y += string.o
+#obj-y += symbols.o
 obj-y += tables_csum.o
 obj-y += time.o
 obj-y += hexdump.o
