@@ -226,6 +226,8 @@ hostprogs-$(CONFIG_ARCH_MVEBU) += kwboot
 hostprogs-y += proftool
 proftool-objs = proftool.o generated/lib/abuf.o
 
+hostprogs-y += symbols
+
 hostprogs-$(CONFIG_STATIC_RELA) += relocate-rela
 hostprogs-$(CONFIG_RISCV) += prelink-riscv
 
