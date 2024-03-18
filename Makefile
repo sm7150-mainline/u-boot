@@ -1782,13 +1782,26 @@ quiet_cmd_u-boot__ ?= LD      $@
 		-T u-boot.lds $(u-boot-init)					\
 		--whole-archive							\
 			$(u-boot-main)						\
+			$(if $(shell [ "$@" = "u-boot" ] && echo "true"),lib/symbols.o u-boot.sym.o,)			\
 		--no-whole-archive						\
 		$(PLATFORM_LIBS) -Map u-boot.map;				\
 		$(if $(ARCH_POSTLINK), $(MAKE) -f $(ARCH_POSTLINK) $@, true)
 endif
 
-u-boot:	$(u-boot-init) $(u-boot-main) $(u-boot-keep-syms-lto) u-boot.lds FORCE
+u-boot.nosyms:	$(u-boot-init) $(u-boot-main) $(u-boot-keep-syms-lto) u-boot.lds FORCE
 	+$(call if_changed,u-boot__)
+
+ifeq ($(CONFIG_SYMBOL_LOOKUP),y)
+u-boot: u-boot.nosyms FORCE
+	@$(NM) -n -pa --format=sysv u-boot.nosyms | tools/symbols --all-symbols --sysv --sort > u-boot.sym.S
+	@$(CC) $(c_flags) -c $(srctree)/lib/symbols.c -o lib/symbols.o
+	@$(AS) u-boot.sym.S -o u-boot.sym.o
+	@$(call cmd,u-boot__)
+else
+u-boot: u-boot.nosyms FORCE
+	+$(call if_changed,copy)
+endif
+
 
 ifeq ($(CONFIG_RISCV),y)
 	@tools/prelink-riscv $@
