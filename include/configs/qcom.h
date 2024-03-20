@@ -22,7 +22,7 @@
 	"stdout=serial,vidconsole\0"	\
 	"stderr=serial,vidconsole\0" \
 	"bootfile=/extlinux/extlinux.conf\0" \
-	"preboot=usb start\0" \
+	"preboot=scsi scan; usb start\0" \
 	"fastboot=fastboot -l $fastboot_addr_r usb 0\0" \
 	"do_boot=bootefi bootmgr\0" \
 	"bootmenu_0=Boot first available device=run do_boot\0" \
