@@ -397,6 +397,155 @@ static int count_ranges(void)
 	return count;
 }
 
+#define ALL_ATTRS (3 << 8 | PMD_ATTRINDX_MASK)
+
+static void pretty_print_pte_type(u64 pte, int level)
+{
+	if (pte_type(&pte) == PTE_TYPE_FAULT)
+		printf(" %-7s", "Fault");
+	else if (level < 3 && pte_type(&pte) == PTE_TYPE_TABLE)
+		printf(" %-7s", "Table");
+	else if (pte_type(&pte) == PTE_TYPE_BLOCK)
+		printf(" %-7s", "Block");
+	else if (pte_type(&pte) == PTE_TYPE_PAGE)
+		printf(" %-7s", "Pages");
+	else
+		printf(" %-7s", "Unknown");
+}
+
+static void pretty_print_block_attrs(u64 pte, int level)
+{
+	u64 attrs = pte & PMD_ATTRINDX_MASK;
+
+	if (attrs == PTE_BLOCK_MEMTYPE(MT_DEVICE_NGNRNE))
+		printf(" | %-13s", "Device-nGnRnE");
+	else if (attrs == PTE_BLOCK_MEMTYPE(MT_DEVICE_NGNRE))
+		printf(" | %-13s", "Device-nGnRE");
+	else if (attrs == PTE_BLOCK_MEMTYPE(MT_DEVICE_GRE))
+		printf(" | %-13s", "Device-GRE");
+	else if (attrs == PTE_BLOCK_MEMTYPE(MT_NORMAL_NC))
+		printf(" | %-13s", "Normal-NC");
+	else if (attrs == PTE_BLOCK_MEMTYPE(MT_NORMAL))
+		printf(" | %-13s", "Normal");
+	else
+		printf(" | %-13s", "Unknown");
+}
+
+static void pretty_print_block_memtype(u64 pte, int level)
+{
+	u64 share = pte & (3 << 8);
+
+	if (share == PTE_BLOCK_NON_SHARE)
+		printf(" | %-16s", "Non-shareable");
+	else if (share == PTE_BLOCK_OUTER_SHARE)
+		printf(" | %-16s", "Outer-shareable");
+	else if (share == PTE_BLOCK_INNER_SHARE)
+		printf(" | %-16s", "Inner-shareable");
+	else
+		printf(" | %-16s", "Unknown");
+}
+
+static void print_pte(u64 pte, int level)
+{
+	//pretty_print_pte_type(pte, level);
+	pretty_print_block_attrs(pte, level);
+	pretty_print_block_memtype(pte, level);
+	printf("\n");
+}
+
+enum walker_state {
+	WALKER_STATE_START,
+	WALKER_STATE_TABLE,
+	WALKER_STATE_BLOCK,
+	WALKER_STATE_PAGE,
+};
+
+static void __pagetable_walk(u64 addr, u64 tcr, int level, pte_walker_cb_t cb, void *priv)
+{
+	u64 *table = (u64 *)addr;
+	u64 attrs, last_attrs = 0, last_addr = 0, entry_start = 0;
+	int i;
+	u64 va_bits = tcr ? (64 - (tcr & (BIT(6)-1))) : 48;
+	static enum walker_state state[4] = { 0 };
+	static int exit = 0;
+
+	if (!level) {
+		exit = false;
+		if (va_bits < 39)
+			level = 1;
+	}
+
+	state[level] = WALKER_STATE_START;
+
+	for (i = 0; i < MAX_PTE_ENTRIES; i++) {
+		u64 pte = table[i];
+		u64 _addr = pte & GENMASK_ULL(va_bits, PAGE_SHIFT);
+
+		if (exit)
+			return;
+
+		if (pte_type(&pte) == PTE_TYPE_FAULT)
+			continue;
+
+		attrs = pte & ALL_ATTRS;
+		if (state[level] > WALKER_STATE_START && state[level] != WALKER_STATE_TABLE) {
+			if (attrs == last_attrs || _addr == last_addr + (1 << level2shift(level))) {
+				last_attrs = attrs;
+				last_addr = _addr;
+				continue;
+			} else {
+				exit = cb(entry_start, last_addr + (1 << level2shift(level)), va_bits, priv);
+				if (exit) 
+					return;
+				state[level] = WALKER_STATE_START;
+			}
+		}
+		last_attrs = attrs;
+		last_addr = _addr;
+
+		if (level < 3 && pte_type(&pte) == PTE_TYPE_TABLE) {
+			/* After the end of the table might be corrupted data */
+			if (!_addr || (pte & 0xfff) > 0x3ff)
+				return;
+			state[level] = WALKER_STATE_TABLE;
+			__pagetable_walk(_addr, tcr, level + 1, cb, priv);
+			state[level] = WALKER_STATE_START;
+		} else if (pte_type(&pte) == PTE_TYPE_BLOCK) {
+			entry_start = pte;
+			state[level] = WALKER_STATE_BLOCK;
+		} else if (pte_type(&pte) == PTE_TYPE_PAGE) {
+			entry_start = pte;
+			state[level] = WALKER_STATE_PAGE;
+		}
+	}
+
+	if (state[level] > WALKER_STATE_START) {
+		exit = cb(entry_start, last_addr + (1 << level2shift(level)), va_bits, priv);
+	}
+}
+
+static bool pagetable_print_entry(u64 start_attrs, u64 end, int va_bits, void *priv)
+{
+	u64 _addr = start_attrs & GENMASK_ULL(va_bits, PAGE_SHIFT);
+
+	printf("[%#011llx - %#011llx]", _addr, end);
+	print_pte(start_attrs, 3);
+
+	return false;
+}
+
+/* Walk the pagetable at addr and dump it */
+void walk_pagetable(u64 addr, u64 tcr, pte_walker_cb_t cb, void *priv)
+{
+	printf("Walking pagetable at %p\n", (void *)addr);
+	__pagetable_walk(addr, tcr, 0, cb, priv);
+}
+
+void dump_pagetable(u64 addr, u64 tcr)
+{
+	walk_pagetable(addr, tcr, pagetable_print_entry, NULL);
+}
+
 /* Returns the estimated required size of all page tables */
 __weak u64 get_page_table_size(void)
 {

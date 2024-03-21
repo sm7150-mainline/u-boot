@@ -129,6 +129,36 @@ static inline void set_ttbr_tcr_mair(int el, u64 table, u64 tcr, u64 attr)
 	asm volatile("isb");
 }
 
+static inline void get_ttbr_tcr_mair(int el, u64 *table, u64 *tcr, u64 *attr)
+{
+	if (el == 1) {
+		asm volatile("mrs %0, ttbr0_el1" : "=r" (*table));
+		asm volatile("mrs %0, tcr_el1" : "=r" (*tcr));
+		asm volatile("mrs %0, mair_el1" : "=r" (*attr));
+	} else if (el == 2) {
+		asm volatile("mrs %0, ttbr0_el2" : "=r" (*table));
+		asm volatile("mrs %0, tcr_el2" : "=r" (*tcr));
+		asm volatile("mrs %0, mair_el2" : "=r" (*attr));
+	} else if (el == 3) {
+		asm volatile("mrs %0, ttbr0_el3" : "=r" (*table));
+		asm volatile("mrs %0, tcr_el3" : "=r" (*tcr));
+		asm volatile("mrs %0, mair_el3" : "=r" (*attr));
+	} else {
+		hang();
+	}
+}
+
+/**
+ * pte_walker_cb_t - callback function for walk_pagetable
+ *
+ * @addr: PTE start address with mem and share type attributes
+ * @entry: PTE entry value
+ */
+typedef bool (*pte_walker_cb_t)(u64 addr, u64 end, int va_bits, void *priv);
+
+void walk_pagetable(u64 addr, u64 tcr, pte_walker_cb_t cb, void *priv);
+void dump_pagetable(u64 addr, u64 tcr);
+
 struct mm_region {
 	u64 virt;
 	u64 phys;
