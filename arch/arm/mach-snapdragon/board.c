@@ -94,7 +94,6 @@ void *board_fdt_blob_setup(int *err)
 {
 	struct fdt_header *fdt;
 	bool internal_valid;
-
 	*err = 0;
 	fdt = (struct fdt_header *)get_prev_bl_fdt_addr();
 	internal_valid = !fdt_check_header(gd->fdt_blob);
