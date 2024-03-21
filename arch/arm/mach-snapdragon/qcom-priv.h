@@ -25,4 +25,12 @@ static inline void qcom_of_fixup_nodes(void)
 }
 #endif /* OF_LIVE */
 
+struct pte_smem_detect_state {
+	phys_addr_t ram_start;
+	phys_addr_t start;
+	size_t size;
+};
+
+int qcom_smem_detect(struct pte_smem_detect_state *state);
+
 #endif /* __QCOM_PRIV_H__ */
