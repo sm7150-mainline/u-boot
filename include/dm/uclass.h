@@ -68,6 +68,8 @@ struct udevice;
  * @child_post_probe: Called after a child in this uclass is probed
  * @init: Called to set up the uclass
  * @destroy: Called to destroy the uclass
+ * @stub_drv_name: Name of a stub driver to use for devices that are not
+ * supported by any other driver.
  * @priv_auto: If non-zero this is the size of the private data
  * to be allocated in the uclass's ->priv pointer. If zero, then the uclass
  * driver is responsible for allocating any data required.
@@ -99,6 +101,7 @@ struct uclass_driver {
 	int (*child_post_probe)(struct udevice *dev);
 	int (*init)(struct uclass *class);
 	int (*destroy)(struct uclass *class);
+	const char *fallback_drv_name;
 	int priv_auto;
 	int per_device_auto;
 	int per_device_plat_auto;

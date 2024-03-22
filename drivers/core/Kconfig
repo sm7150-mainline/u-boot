@@ -467,4 +467,14 @@ config BOUNCE_BUFFER
 	  A second possible use of bounce buffers is their ability to
 	  provide aligned buffers for DMA operations.
 
+menuconfig FALLBACK_DRIVERS
+	bool "Enable per-uclass fallback drivers"
+	depends on DM
+	help
+	  If a driver requests a resource (like a clock) from a node which
+	  isn't bound to a driver, the driver model will look for a fallback
+	  driver to "stub" the resource. These stubs usually do nothing and
+	  are therefore only suitable in instances where the resource is not
+	  required.
+
 endmenu
