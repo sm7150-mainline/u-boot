@@ -5,6 +5,7 @@
 #
 
 obj-$(CONFIG_$(SPL_TPL_)CLK) += clk-uclass.o
+obj-$(CONFIG_CLK_STUB) += clk-stub.o
 obj-$(CONFIG_$(SPL_TPL_)CLK) += clk_fixed_rate.o
 obj-$(CONFIG_$(SPL_TPL_)CLK) += clk_fixed_factor.o
 obj-$(CONFIG_$(SPL_TPL_)CLK_CCF) += clk.o clk-divider.o clk-mux.o clk-gate.o

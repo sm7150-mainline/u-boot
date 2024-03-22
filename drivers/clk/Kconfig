@@ -40,6 +40,16 @@ config VPL_CLK
 	  setting up clocks within TPL, and allows the same drivers to be
 	  used as U-Boot proper.
 
+config CLK_STUB
+	bool "Enable fallback clock stub"
+	depends on CLK
+	help
+	  This provides a no-op clock driver that can be used as a fallback
+	  when no other driver is available. This is useful for systems with
+	  clock controllers that are not actually required for peripherals to
+	  work correctly (for example the RPMh clock controller on Qualcomm
+	  platforms).
+
 config CLK_BCM6345
 	bool "Clock controller driver for BCM6345"
 	depends on CLK && ARCH_BMIPS
