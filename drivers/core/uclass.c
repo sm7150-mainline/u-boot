@@ -379,6 +379,21 @@ int uclass_find_device_by_of_offset(enum uclass_id id, int node,
 	return -ENODEV;
 }
 
+static int uclass_bind_default_stub(struct uclass *uc, ofnode node, struct udevice **devp)
+{
+	struct driver *drv;
+
+	drv = lists_driver_lookup_name(uc->uc_drv->stub_drv_name);
+	if (!drv) {
+		log(LOGC_DM, LOGL_DEBUG, "   - Can't find stub driver '%s' for uclass '%s'\n",
+		    uc->uc_drv->stub_drv_name, uc->uc_drv->name);
+		return -ENOENT;
+	}
+
+	return device_bind_with_driver_data(gd->dm_root, drv,
+					  ofnode_get_name(node), 0, node, devp);
+}
+
 int uclass_find_device_by_ofnode(enum uclass_id id, ofnode node,
 				 struct udevice **devp)
 {
@@ -402,7 +417,11 @@ int uclass_find_device_by_ofnode(enum uclass_id id, ofnode node,
 			goto done;
 		}
 	}
-	ret = -ENODEV;
+
+	if (uc->uc_drv->stub_drv_name)
+		ret = uclass_bind_default_stub(uc, node, devp);
+	else
+		ret = -ENODEV;
 
 done:
 	log(LOGC_DM, LOGL_DEBUG, "   - result for %s: %s (ret=%d)\n",
