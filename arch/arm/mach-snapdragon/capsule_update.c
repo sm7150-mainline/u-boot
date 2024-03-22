@@ -6,7 +6,10 @@
  * Author: Caleb Connolly <caleb.connolly@linaro.org>
  */
 
+#define pr_fmt(fmt) "CapsuleUpdate: " fmt
+
 #include <dm/device.h>
+#include <dm/uclass.h>
 #include <efi.h>
 #include <efi_loader.h>
 #include <malloc.h>
@@ -75,6 +78,17 @@ static const char *get_cmdline(void)
 	return cmdline;
 }
 
+struct part_slot_status {
+	u16 : 2;
+	u16 active : 1;
+	u16 : 3;
+	u16 successful : 1;
+	u16 unbootable : 1;
+	u16 tries_remaining : 4;
+};
+
+#define SLOT_STATUS(info) ((struct part_slot_status*)&info->type_flags)
+
 static int find_boot_partition(const char *partname, struct blk_desc *blk_dev, struct disk_partition *info)
 {
 	int ret;
@@ -85,12 +99,13 @@ static int find_boot_partition(const char *partname, struct blk_desc *blk_dev, s
 		if (ret) {
 			return ret;
 		}
-		if (!strncmp(info->name, partname, 6)) {
+		if (!strncmp(info->name, partname, strlen(partname)) && SLOT_STATUS(info)->active) {
+			log_debug("Found active %s partition!\n", partname);
 			return partnum;
 		}
 	}
 
-	return 0;
+	return -1;
 }
 
 void qcom_set_serialno(void)
@@ -99,7 +114,7 @@ void qcom_set_serialno(void)
 	char serial[32];
 
 	if (!cmdline) {
-		debug("Failed to get bootargs\n");
+		log_debug("Failed to get bootargs\n");
 		return;
 	}
 
@@ -117,20 +132,17 @@ void qcom_set_serialno(void)
  * full A/B updates, we only support updating the currently active boot partition.
  *
  * So we need to find the current slot suffix and the associated boot partition.
- * The slot suffix is most easily accessed via the bootargs which are populated by
- * the previous stage bootloader (ABL). However in the future we will likely want to
- * read them directly from the GPT vendor attribute bits.
- *
- * For now only SCSI is supported.
+ * We do this by looking for the boot partition that has the 'active' flag set
+ * in the GPT partition vendor attribute bits.
  */
 void qcom_configure_capsule_updates(void)
 {
 	struct blk_desc *desc;
 	struct disk_partition info;
-	int ret, partnum = -1, devnum;
-	char *dfu_string;
-	const char *cmdline;
-	char partname[7] = "boot";
+	int ret = 0, partnum = -1, devnum;
+	static char dfu_string[32] = { 0 };
+	char *partname = "boot";
+	struct udevice *dev = NULL;
 
 #ifdef CONFIG_SCSI
 	/* Scan for SCSI devices */
@@ -140,42 +152,41 @@ void qcom_configure_capsule_updates(void)
 		return;
 	}
 #else
-	debug("Qualcomm UEFI CapsuleUpdates requires SCSI support\n");
-	return;
+	debug("Qualcomm capsule update running without SCSI support!\n");
 #endif
 
-	cmdline = get_cmdline();
-	if (!cmdline) {
-		debug("Failed to get bootargs\n");
-		return;
-	}
-
-	/* Some boards might only have one boot partition, so this is optional */
-	ret = get_cmdline_option(cmdline, "androidboot.slot_suffix=", &partname[4], 3);
-	if (ret < 0)
-		debug("Failed to get slot suffix from bootargs (board might be A-only?)\n");
-
-	for(devnum = 0;; devnum++) {
-		ret = blk_get_desc(UCLASS_SCSI, devnum, &desc);
-		if (ret == -ENODEV)
-			break;
-		else if (ret)
+	uclass_foreach_dev_probe(UCLASS_BLK, dev) {
+		if (device_get_uclass_id(dev) != UCLASS_BLK)
 			continue;
-		if (desc->part_type != PART_TYPE_UNKNOWN) {
-			partnum = find_boot_partition(partname, desc, &info);
-			if (partnum >= 0)
-				break;
-		}
+
+		desc = dev_get_uclass_plat(dev);
+		if (!desc || desc->part_type == PART_TYPE_UNKNOWN)
+			continue;
+		devnum = desc->devnum;
+		partnum = find_boot_partition(partname, desc,
+					      &info);
+		if (partnum >= 0)
+			break;
 	}
+
 	if (partnum < 0) {
-		debug("Failed to find boot partition\n");
+		log_err("Failed to find boot partition\n");
 		return;
 	}
 
-	dfu_string = malloc(32);
-
-	snprintf(dfu_string, 32, "scsi %d=u-boot-bin part %d", devnum, partnum);
-	printf("DFU string: %s\n", dfu_string);
+	switch(desc->uclass_id) {
+	case UCLASS_SCSI:
+		snprintf(dfu_string, 32, "scsi %d=u-boot-bin part %d", devnum, partnum);
+		break;
+	case UCLASS_MMC:
+		snprintf(dfu_string, 32, "mmc part %d:%d=u-boot-bin", devnum, partnum);
+		break;
+	default:
+		debug("Unsupported storage uclass: %d\n", desc->uclass_id);
+		return;
+	}
+	log_debug("U-Boot boot partition is %s\n", info.name);
+	log_debug("DFU string: %s\n", dfu_string);
 
 	update_info.dfu_string = dfu_string;
 }
