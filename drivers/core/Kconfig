@@ -477,4 +477,14 @@ menuconfig FALLBACK_DRIVERS
 	  are therefore only suitable in instances where the resource is not
 	  required.
 
+config CLK_FALLBACK
+	bool "Enable the clock fallback driver"
+	depends on FALLBACK_DRIVERS && CLK
+	help
+	  This provides a no-op clock driver that can be used as a fallback
+	  when no other driver is available. This is useful for systems with
+	  clock controllers that are not actually required for peripherals to
+	  work correctly (for example the RPMh clock controller on Qualcomm
+	  platforms).
+
 endmenu

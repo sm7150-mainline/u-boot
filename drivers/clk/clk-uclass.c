@@ -12,6 +12,7 @@
 #include <clk.h>
 #include <clk-uclass.h>
 #include <dm.h>
+#include <dm/lists.h>
 #include <dt-structs.h>
 #include <errno.h>
 #include <log.h>
@@ -802,5 +803,8 @@ int clk_uclass_post_probe(struct udevice *dev)
 UCLASS_DRIVER(clk) = {
 	.id		= UCLASS_CLK,
 	.name		= "clk",
+#if CONFIG_IS_ENABLED(CLK_FALLBACK)
+	.fallback_drv_name	= "clk_fallback",
+#endif
 	.post_probe	= clk_uclass_post_probe,
 };
