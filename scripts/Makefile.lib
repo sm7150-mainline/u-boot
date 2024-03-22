@@ -361,7 +361,12 @@ capsule_esl_path=$(abspath $(srctree)/$(subst $(quote),,$(CONFIG_EFI_CAPSULE_ESL
 dtsi_include_list_deps := $(addprefix $(u_boot_dtsi_loc),$(subst $(quote),,$(dtsi_include_list)))
 
 ifdef CONFIG_EFI_CAPSULE_AUTHENTICATE
+# OF_UPSTREAM introduces vendor subdirectories, so this file will be one dir up
+ifeq ($(CONFIG_OF_UPSTREAM),y)
+dtsi_include_list += ../$(capsule_esl_dtsi)
+else
 dtsi_include_list += $(capsule_esl_dtsi)
+endif
 dtsi_include_list_deps += $(obj)/$(capsule_esl_dtsi)
 endif
 
