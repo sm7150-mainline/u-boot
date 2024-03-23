@@ -93,16 +93,18 @@ static void show_psci_version(void)
 void *board_fdt_blob_setup(int *err)
 {
 	struct fdt_header *fdt;
-	bool internal_valid;
+	bool internal_valid, external_valid;
+
 	*err = 0;
 	fdt = (struct fdt_header *)get_prev_bl_fdt_addr();
+	external_valid = fdt && !fdt_check_header(fdt);
 	internal_valid = !fdt_check_header(gd->fdt_blob);
 
 	/*
 	 * There is no point returning an error here, U-Boot can't do anything useful in this situation.
 	 * Bail out while we can still print a useful error message.
 	 */
-	if (!internal_valid && (!fdt || fdt_check_header(fdt) != 0))
+	if (!internal_valid && !external_valid)
 		panic("Internal FDT is invalid and no external FDT was provided! (fdt=%#llx)\n", (phys_addr_t)fdt);
 
 	if (internal_valid) {
