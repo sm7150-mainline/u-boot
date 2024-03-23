@@ -41,8 +41,16 @@ static struct mm_region rbx_mem_map[CONFIG_NR_DRAM_BANKS + 2] = { { 0 } };
 
 struct mm_region *mem_map = rbx_mem_map;
 
+static u64 prevbl_ddr_banks[8] __section(".data") = { 0 };
+
 int dram_init(void)
 {
+	/* RAM config might have been handled already if we're using
+	 * an external FDT (provided by a previous stage bootloader).
+	 */
+	if (gd->ram_size)
+		return 0;
+
 	return fdtdec_setup_mem_size_base();
 }
 
@@ -61,11 +69,26 @@ static int ddr_bank_cmp(const void *v1, const void *v2)
 	return (res1->start >> 24) - (res2->start >> 24);
 }
 
+static int qcom_prevbl_configure_bi_dram(void)
+{
+	int i = 0;
+
+	for (i = 0; i < min((ulong)CONFIG_NR_DRAM_BANKS, ARRAY_SIZE(prevbl_ddr_banks)); i += 2) {
+		gd->bd->bi_dram[i/2].start = prevbl_ddr_banks[i];
+		gd->bd->bi_dram[i/2].size = prevbl_ddr_banks[i + 1];
+	}
+
+	return 0;
+}
+
 int dram_init_banksize(void)
 {
 	int ret;
 
-	ret = fdtdec_setup_memory_banksize();
+	if (prevbl_ddr_banks[0])
+		ret = qcom_prevbl_configure_bi_dram();
+	else
+		ret = fdtdec_setup_memory_banksize();
 	if (ret < 0)
 		return ret;
 
@@ -76,6 +99,38 @@ int dram_init_banksize(void)
 	qsort(gd->bd->bi_dram, CONFIG_NR_DRAM_BANKS, sizeof(gd->bd->bi_dram[0]), ddr_bank_cmp);
 
 	return 0;
+}
+
+static void qcom_parse_memory(void)
+{
+	ofnode node;
+	const fdt64_t *memory;
+	int memsize;
+	phys_addr_t ram_end = 0;
+	int i;
+
+	node = ofnode_path("/memory");
+	if (!ofnode_valid(node)) {
+		log_err("No memory node found in device tree!\n");
+		return;
+	}
+	memory = ofnode_read_prop(node, "reg", &memsize);
+	if (!memory) {
+		log_err("No memory configuration was provided by the previous bootloader!\n");
+		return;
+	}
+
+	if (memsize / sizeof(u64) > ARRAY_SIZE(prevbl_ddr_banks))
+		log_err("Provided more than the max of %lu memory banks\n", ARRAY_SIZE(prevbl_ddr_banks));
+	for (i = 0; i < min(memsize / sizeof(u64), ARRAY_SIZE(prevbl_ddr_banks)); i++) {
+		prevbl_ddr_banks[i] = fdt64_to_cpu(memory[i]);
+		if (i % 2 == 1)
+			ram_end = max(ram_end, prevbl_ddr_banks[i-1] + prevbl_ddr_banks[i]);
+	}
+
+	gd->ram_base = prevbl_ddr_banks[0];
+	gd->ram_size = ram_end - gd->ram_base;
+	log_debug("ram_base = %#011lx, ram_size = %#011llx\n", gd->ram_base, gd->ram_size);
 }
 
 static void show_psci_version(void)
@@ -115,6 +170,13 @@ void *board_fdt_blob_setup(int *err)
 		return (void *)gd->fdt_blob;
 	} else {
 		debug("Using external FDT\n");
+		/* We actually need to use this FDT to pre-emptively parse the memory
+		 * configuration to properly handle the multi-DTB FIT usecase. So
+		 * assign gd->fdt_blob here. It gets overriden again anyway.
+		 */
+		gd->fdt_blob = fdt;
+		/* First we take the chance to parse the memory configuration */
+		qcom_parse_memory();
 		return (void *)fdt;
 	}
 }
