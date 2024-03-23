@@ -25,6 +25,22 @@ static inline void qcom_of_fixup_nodes(void)
 }
 #endif /* OF_LIVE */
 
+#if CONFIG_IS_ENABLED(MULTI_DTB_FIT)
+
+/**
+ * qcom_of_match() - determine the FIT config name for the
+ * current board based on the FDT provided by ABL or LK.
+ * This assumes that the FDT is a dummy which just contains
+ * the match data to use following the lk2nd spec.
+ */
+const char *qcom_of_match(void *external_fdt);
+#else
+static inline const char *qcom_of_match(void *external_fdt)
+{
+	return NULL;
+}
+#endif /* MULTI_DTB_FIT */
+
 struct pte_smem_detect_state {
 	phys_addr_t ram_start;
 	phys_addr_t start;
