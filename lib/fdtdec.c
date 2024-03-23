@@ -1162,6 +1162,29 @@ int fdtdec_setup_mem_size_base_lowest(void)
 	return 0;
 }
 
+u64 fdtdec_get_initrd_start_addr(void *fdt_blob)
+{
+	const void *initrd_start_prop;
+	int len;
+	int node;
+
+	node = fdt_path_offset(fdt_blob, "/chosen");
+	if (!node) {
+		pr_warn("%s: chosen node not found in device tree at addr: 0x%p\n",
+					__func__, fdt_blob);
+		return -ENODATA;
+	}
+
+	/*
+	 * linux,initrd-start property might be either 64 or 32 bit,
+	 * depending on primary bootloader implementation.
+	 */
+	initrd_start_prop = fdt_getprop(fdt_blob, node, "linux,initrd-start", &len);
+	if (!initrd_start_prop)
+		return -ENODATA;
+	return fdtdec_get_number(initrd_start_prop, len / sizeof(u32));
+}
+
 static int uncompress_blob(const void *src, ulong sz_src, void **dstp)
 {
 #if CONFIG_IS_ENABLED(MULTI_DTB_FIT_GZIP) ||\
