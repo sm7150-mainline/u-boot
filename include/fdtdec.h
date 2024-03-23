@@ -951,6 +951,12 @@ int fdtdec_setup_mem_size_base(void);
 int fdtdec_setup_mem_size_base_lowest(void);
 
 /**
+ * fdtdec_get_initrd_start_addr() - Get the initrd start address from
+ * the chosen node of the given fdt blob.
+ */
+u64 fdtdec_get_initrd_start_addr(void *fdt_blob);
+
+/**
  * fdtdec_setup_memory_banksize() - decode and populate gd->bd->bi_dram
  *
  * Decode the /memory 'reg' property to determine the address and size of the

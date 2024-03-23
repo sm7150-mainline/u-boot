@@ -53,7 +53,6 @@ phys_addr_t get_prev_bl_fdt_addr(void)
 int save_prev_bl_data(void)
 {
 	struct fdt_header *fdt_blob;
-	int node;
 	u64 initrd_start_prop;
 
 	if (!is_addr_accessible((phys_addr_t)reg0))
@@ -70,26 +69,7 @@ int save_prev_bl_data(void)
 	if (!IS_ENABLED(CONFIG_SAVE_PREV_BL_INITRAMFS_START_ADDR))
 		return 0;
 
-	node = fdt_path_offset(fdt_blob, "/chosen");
-	if (!node) {
-		pr_warn("%s: chosen node not found in device tree at addr: 0x%lx\n",
-					__func__, reg0);
-		return -ENODATA;
-	}
-	/*
-	 * linux,initrd-start property might be either 64 or 32 bit,
-	 * depending on primary bootloader implementation.
-	 */
-	initrd_start_prop = fdtdec_get_uint64(fdt_blob, node, "linux,initrd-start", 0);
-	if (!initrd_start_prop) {
-		debug("%s: attempt to get uint64 linux,initrd-start property failed, trying uint\n",
-				__func__);
-		initrd_start_prop = fdtdec_get_uint(fdt_blob, node, "linux,initrd-start", 0);
-		if (!initrd_start_prop) {
-			debug("%s: attempt to get uint failed, too\n", __func__);
-			return -ENODATA;
-		}
-	}
+	initrd_start_prop = fdtdec_get_initrd_start_addr(fdt_blob);
 	env_set_addr("prevbl_initrd_start_addr", (void *)initrd_start_prop);
 
 	return 0;
