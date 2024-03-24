@@ -947,9 +947,6 @@ void *realloc_simple(void *ptr, size_t size);
 
 #endif
 
-/* Set up pre-relocation malloc() ready for use */
-int initf_malloc(void);
-
 /* Public routines */
 
 /* Simple versions which can be used when space is tight */

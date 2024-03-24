@@ -162,6 +162,8 @@ void board_init_f_init_reserve(ulong base)
 #if CONFIG_IS_ENABLED(SYS_MALLOC_F)
 	/* go down one 'early malloc arena' */
 	gd->malloc_base = base;
+	gd->malloc_limit = CONFIG_VAL(SYS_MALLOC_F_LEN);
+	gd->malloc_ptr = 0;
 #if CONFIG_IS_ENABLED(ZERO_MEM_BEFORE_USE)
 	memset((void *)base, '\0', CONFIG_VAL(SYS_MALLOC_F_LEN));
 #endif
