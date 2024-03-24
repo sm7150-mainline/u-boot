@@ -1,0 +1,64 @@
+// SPDX-License-Identifier: GPL-2.0
+
+/dts-v1/;
+
+/ {
+	#address-cells = <2>;
+	#size-cells = <2>;
+
+	memory {
+		/* We expect the bootloader to fill in the size */
+		reg = <0 0 0 0>;
+	};
+
+	chosen {
+		fdt_match: match { };
+	};
+};
+
+&fdt_match {
+	sdm845-oneplus-enchilada {
+		match,memory = <0x00000000 0x80000000 0x00000001 0x00000000>,
+			       <0x00000001 0x80000000 0x00000000 0xfc8a0000>;
+		match,bootargs = "msm_drm.dsi_display0=dsi_samsung_sofef00_m_cmd_display";
+	};
+
+	sdm845-oneplus-fajita {
+		match,memory = <0x00000000 0x80000000 0x00000001 0x00000000>,
+			       <0x00000001 0x80000000 0x00000000 0xfc8a0000>;
+		match,bootargs = "msm_drm.dsi_display0=dsi_samsung_s6e3fc2x01_cmd_display";
+	};
+
+	sdm845-shift-axolotl {
+		match,memory = <0x00000000 0x80000000 0x00000001 0x00000000>,
+			       <0x00000001 0x80000000 0x00000000 0xfc7a0000>;
+		match,bootargs = "msm_drm.dsi_display0=dsi_shift6mq_rm6929";
+	};
+
+	sdm845-xiaomi-beryllium-tianma {
+		match,bootargs = "msm_drm.dsi_display0=dsi_tianma_fhd_nt36672a_video_display";
+	};
+
+	sdm845-xiaomi-beryllium-ebgg {
+		match,bootargs = "msm_drm.dsi_display0=dsi_ebbg_fhd_ft8719_video_display";
+	};
+
+	sdm845-db845c {
+		match,memory = <0x00000000 0x80000000 0x00000000 0xfdfa0000>;
+		match,bootargs = "androidboot.bootdevice=1d84000.ufshc";
+	};
+
+	qrb5165-rb5 {
+		/* FIXME: sometimes the order here seems to change?! */
+		match,memory = <0 0x80000000 0 0x3B800000>,
+			       <1 0x80000000 1 0x00000000>,
+			       <0 0xC0000000 0 0xC0000000>;
+	};
+
+	/* RB1 also matches this and there's nothing more specific so we need SMEM too */
+	qrb4210-rb2 {
+		match,memory = <0x00000000 0x40000000 0x00000000 0x3eb00000>,
+			       <0x00000000 0x80000000 0x00000000 0x40000000>;
+		match,bootargs = "androidboot.bootdevice=4744000.sdhci";
+	};
+};
