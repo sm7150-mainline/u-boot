@@ -20,10 +20,22 @@ else
 dt_dir := arch/$(ARCH)/dts
 endif
 
+DTB_FROM_UBOOT :=
+
 ifneq ($(EXT_DTB),)
 DTB := $(EXT_DTB)
 else
+# If using OF_UPSTREAM, DEFAULT_DEVICE_TREE might
+# point to a dummy DTS that doesn't exist upstream, in that case
+# use U-Boots DT dir instead of dts/upstream.
+ifeq ($(CONFIG_OF_UPSTREAM).$(wildcard $(srctree)/$(dt_dir)/$(DEVICE_TREE).dts),y.)
+DTB := arch/$(ARCH)/dts/$(DEVICE_TREE).dtb
+DTB_FROM_UBOOT := y
+$(info DTB is $(DTB))
+else
 DTB := $(dt_dir)/$(DEVICE_TREE).dtb
+$(info upstream DTB is $(DTB))
+endif
 endif
 
 $(obj)/dt-$(SPL_NAME).dtb: dts/dt.dtb $(objtree)/tools/fdtgrep FORCE
@@ -52,6 +64,9 @@ $(DTB): arch-dtbs
 PHONY += arch-dtbs
 arch-dtbs:
 	$(Q)$(MAKE) $(build)=$(dt_dir) dtbs
+ifeq ($(DTB_FROM_UBOOT),y)
+	$(Q)$(MAKE) $(build)=arch/$(ARCH)/dts $(DTB)
+endif
 
 ifeq ($(CONFIG_SPL_BUILD),y)
 obj-$(CONFIG_OF_EMBED) := dt-spl.dtb.o
