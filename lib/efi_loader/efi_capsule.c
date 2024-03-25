@@ -20,6 +20,7 @@
 #include <sort.h>
 #include <sysreset.h>
 #include <asm/global_data.h>
+#include <uuid.h>
 
 #include <crypto/pkcs7.h>
 #include <crypto/pkcs7_parser.h>
@@ -403,6 +404,37 @@ out:
 	return status;
 }
 #endif /* CONFIG_EFI_CAPSULE_AUTHENTICATE */
+
+#if CONFIG_IS_ENABLED(EFI_CAPSULE_DYNAMIC_UUIDS)
+int efi_capsule_update_info_gen_ids(efi_guid_t *namespace, const char *soc, const char *model, const char *compatible)
+{
+	int i;
+
+	if (!model || !compatible) {
+		log_err("%s: model or compatible not defined\n", __func__);
+		return -EINVAL;
+	}
+
+	if (!update_info.num_images) {
+		log_err("%s: no fw_images, make sure update_info.num_images is set\n", __func__);
+		return -ENODATA;
+	}
+
+	for (i = 0; i < update_info.num_images; i++) {
+		gen_uuid_v5((struct uuid*)namespace, (struct uuid *)&update_info.images[i].image_type_id,
+			    soc, strlen(soc),
+			    model, strlen(model),
+			    compatible, strlen(compatible),
+			    update_info.images[i].fw_name, u16_strlen(update_info.images[i].fw_name),
+			    NULL);
+
+		log_debug("Image %ls generated UUID %pUs\n", update_info.images[i].fw_name,
+			  &update_info.images[i].image_type_id);
+	}
+
+	return 0;
+}
+#endif
 
 static __maybe_unused bool fwu_empty_capsule(struct efi_capsule_header *capsule)
 {
