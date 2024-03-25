@@ -22,6 +22,7 @@
 #include <malloc.h>
 #include <dm/uclass.h>
 #include <rng.h>
+#include <u-boot/sha1.h>
 
 int uuid_str_valid(const char *uuid)
 {
@@ -368,6 +369,39 @@ void uuid_bin_to_str(const unsigned char *uuid_bin, char *uuid_str,
 		}
 	}
 }
+
+#if CONFIG_IS_ENABLED(UUID_GEN_V5)
+void gen_uuid_v5(struct uuid *namespace, struct uuid *uuid, ...)
+{
+	sha1_context ctx;
+	va_list args;
+	u8 hash[SHA1_SUM_LEN];
+
+	sha1_starts (&ctx);
+	/* Hash the namespace UUID as salt together with the name */
+	sha1_update(&ctx, (char*)namespace, UUID_BIN_LEN);
+	va_start(args, uuid);
+	while (1) {
+		const u8 *data = va_arg(args, const u8 *);
+		if (!data)
+			break;
+		sha1_update(&ctx, (char*)data, va_arg(args, int));
+	}
+	va_end(args);
+	sha1_finish(&ctx, hash);
+
+	/* Truncate the hash into output UUID and convert it to big endian */
+	cpu_to_be32_array((u32 *)uuid, (u32 *)hash, 4);
+
+	/* Configure variant/version bits */
+	clrsetbits_be16(&uuid->time_hi_and_version,
+			UUID_VERSION_MASK,
+			5 << UUID_VERSION_SHIFT);
+	clrsetbits_8(&uuid->clock_seq_hi_and_reserved,
+		     UUID_VARIANT_MASK,
+		     UUID_VARIANT << UUID_VARIANT_SHIFT);
+}
+#endif
 
 #if defined(CONFIG_RANDOM_UUID) || defined(CONFIG_CMD_UUID)
 void gen_rand_uuid(unsigned char *uuid_bin)

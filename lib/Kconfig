@@ -81,6 +81,14 @@ config RANDOM_UUID
 	  Enable the generation of partitions with random UUIDs if none
 	  are provided.
 
+config UUID_GEN_V5
+	bool "Enable UUID version 5 generation"
+	select LIB_UUID
+	depends on SHA1
+	help
+	  Enable the generation of version 5 UUIDs, these are determistic and
+	  generated from a namespace UUID, and a string (such as a board name).
+
 config SPL_LIB_UUID
 	depends on SPL
 	bool
