@@ -20,7 +20,6 @@
 
 struct efi_fw_image fw_images[] = {
 	{
-		.image_type_id = QUALCOMM_UBOOT_BOOT_IMAGE_GUID,
 		.fw_name = u"QUALCOMM-UBOOT",
 		.image_index = 1,
 	},
@@ -143,6 +142,16 @@ void qcom_configure_capsule_updates(void)
 	static char dfu_string[32] = { 0 };
 	char *partname = "boot";
 	struct udevice *dev = NULL;
+	efi_guid_t namespace_guid = QUALCOMM_UBOOT_BOOT_IMAGE_GUID;
+
+	ret = efi_capsule_update_info_gen_ids(&namespace_guid,
+					      env_get("soc"),
+					      ofnode_read_string(ofnode_root(), "model"),
+					      ofnode_read_string(ofnode_root(), "compatible"));
+	if (ret) {
+		log_err("Failed to generate GUIDs: %d\n", ret);
+		return;
+	}
 
 #ifdef CONFIG_SCSI
 	/* Scan for SCSI devices */
