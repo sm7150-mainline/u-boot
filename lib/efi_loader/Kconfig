@@ -221,6 +221,20 @@ config EFI_CAPSULE_ON_DISK_EARLY
 	  executed as part of U-Boot initialisation so that they will
 	  surely take place whatever is set to distro_bootcmd.
 
+config EFI_CAPSULE_DYNAMIC_UUIDS
+	bool "Dynamic UUIDs for capsules"
+	depends on EFI_HAVE_CAPSULE_SUPPORT
+	select UUID_GEN_V5
+	help
+	  Select this option if you want to use dynamically generated v5
+	  UUIDs for your board. To make use of this feature, your board
+	  code should call efi_capsule_update_info_gen_ids() with a seed
+	  UUID to generate the image_type_id field for each fw_image.
+
+	  The CapsuleUpdate payloads are expected to generate matching UUIDs
+	  using the same scheme.
+
+
 config EFI_CAPSULE_FIRMWARE
 	bool
 
