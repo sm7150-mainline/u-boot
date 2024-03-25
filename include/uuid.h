@@ -143,6 +143,22 @@ void gen_rand_uuid(unsigned char *uuid_bin);
  */
 void gen_rand_uuid_str(char *uuid_str, int str_format);
 
+#if CONFIG_IS_ENABLED(UUID_GEN_V5)
+/**
+ * gen_uuid_v5() - generate UUID v5 from namespace and other seed data.
+ *
+ * @namespace:	pointer to UUID namespace salt
+ * @uuid:	pointer to allocated UUID output
+ * @...:	NULL terminated list of seed data as pairs of pointers
+ * 		to data and their lengths
+ */
+void gen_uuid_v5(struct uuid *namespace, struct uuid *uuid, ...);
+#else
+static inline void gen_uuid_v5(struct uuid *namespace, struct uuid *uuid, ...)
+{
+}
+#endif
+
 /**
  * uuid_str_to_le_bin() - Convert string UUID to little endian binary data.
  * @uuid_str:	pointer to UUID string
