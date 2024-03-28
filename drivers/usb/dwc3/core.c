@@ -60,6 +60,16 @@ static int dwc3_core_soft_reset(struct dwc3 *dwc)
 {
 	u32		reg;
 
+	/*
+	 * Linux commit 07903626d988 ("usb: dwc3: core: Do not perform GCTL_CORE_SOFTRESET during bootup")
+	 * describes that we should only perform a soft reset when mode switching. If we're already in
+	 * host mode then skip the reset.
+	 */
+	if (dwc->dr_mode == USB_DR_MODE_HOST) {
+		log_debug("Skipping soft reset for host mode\n");
+		return 0;
+	}
+
 	/* Before Resetting PHY, put Core in Reset */
 	reg = dwc3_readl(dwc->regs, DWC3_GCTL);
 	reg |= DWC3_GCTL_CORESOFTRESET;
