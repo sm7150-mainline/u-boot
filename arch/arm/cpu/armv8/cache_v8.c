@@ -665,6 +665,10 @@ inline void flush_dcache_all(void)
  */
 void invalidate_dcache_range(unsigned long start, unsigned long stop)
 {
+	if (!start || !stop) {
+		printf("NULL %s: %#lx - %#lx\n", __func__, start, stop);
+		return;
+	}
 	__asm_invalidate_dcache_range(start, stop);
 }
 
@@ -673,6 +677,10 @@ void invalidate_dcache_range(unsigned long start, unsigned long stop)
  */
 void flush_dcache_range(unsigned long start, unsigned long stop)
 {
+	if (!start || !stop) {
+		printf("NULL %s: %#lx - %#lx\n", __func__, start, stop);
+		return;
+	}
 	__asm_flush_dcache_range(start, stop);
 }
 #else
