@@ -2071,6 +2071,8 @@ int ufshcd_probe(struct udevice *ufs_dev, struct ufs_hba_ops *hba_ops)
 		dev_err(hba->dev, "invalid UFS version 0x%x\n",
 			hba->version);
 
+	dev_dbg(hba->dev, "UFS Device %s: version %#010x\n", hba->dev->name, hba->version);
+
 	/* Get Interrupt bit mask per version */
 	hba->intr_mask = ufshcd_get_intr_mask(hba);
 
