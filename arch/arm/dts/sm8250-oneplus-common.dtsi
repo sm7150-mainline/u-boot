@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 /*
- * Copyright (c) 2024, Caleb Connolly <caleb.connolly@linaro.org>
- */
+* Copyright (c) 2024, Caleb Connolly <caleb.connolly@linaro.org>
+*/
 
 /dts-v1/;
 
@@ -11,6 +11,7 @@
 #include <dt-bindings/sound/qcom,q6asm.h>
 #include <dt-bindings/usb/pd.h>
 #include "sm8250.dtsi"
+#include "pm8009.dtsi"
 #include "pm8150.dtsi"
 #include "pm8150b.dtsi"
 #include "pm8150l.dtsi"
@@ -47,13 +48,13 @@
 		autorepeat;
 
 		key-vol-up {
-			label = "Volume Up";
+			label = "Volume up";
 			linux,code = <KEY_VOLUMEUP>;
 			gpios = <&pm8150_gpios 6 GPIO_ACTIVE_LOW>;
 		};
 
 		key-vol-dowm {
-			label = "Volume Down";
+			label = "Volume down";
 			linux,code = <KEY_VOLUMEDOWN>;
 			gpios = <&pm8150_gpios 7 GPIO_ACTIVE_LOW>;
 		};
@@ -124,6 +125,11 @@
 			reg = <0x0 0x94100000 0x0 0x4600000>;
 			no-map;
 		};
+
+		// framebuffer@9c000000 {
+		// 	reg = <0 0x9c000000 0 0x2300000>;
+		// 	no-map;
+		// };
 	};
 
 	vph_pwr: vph-pwr-regulator {
@@ -179,6 +185,7 @@
 		vdd-l5-l6-supply = <&vreg_bob>;
 		vdd-l7-supply = <&vreg_s4a_1p8>;
 
+		/* FIXME: maybe missing/unused on kebab */
 		vreg_s2f_0p95: smps2 {
 			regulator-name = "vreg_s2f_0p95";
 			regulator-min-microvolt = <900000>;
@@ -326,8 +333,8 @@
 
 		vreg_l17a_3p0: ldo17 {
 			regulator-name = "vreg_l17a_3p0";
-			regulator-min-microvolt = <2496000>;
-			regulator-max-microvolt = <3008000>;
+			regulator-min-microvolt = <2504000>;
+			regulator-max-microvolt = <2950000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
@@ -490,7 +497,7 @@
 
 /* LS-I2C1 */
 &i2c15 {
-	status = "okay";
+	status = "disabled";
 
 	typec-mux@42 {
 		compatible = "fcs,fsa4480";
@@ -520,16 +527,12 @@
 	status = "okay";
 	vdda-supply = <&vreg_l9a_1p2>;
 
-	// qcom,dual-dsi-mode;
-	// qcom,sync-dual-dsi;
-	// qcom,master-dsi;
-
 	display_panel: panel@0 {
 		reg = <0>;
 		vddio-supply = <&vreg_l14a_1p8>;
 		reset-gpios = <&tlmm 75 GPIO_ACTIVE_LOW>;
 
-		pinctrl-0 = <&panel_reset_pins &panel_vsync_pins>;
+		pinctrl-0 = <&panel_reset_pins &panel_vsync_pins &panel_vout_pins>;
 		pinctrl-name = "default";
 
 		status = "disabled";
@@ -545,14 +548,6 @@
 					remote-endpoint = <&mdss_dsi0_out>;
 				};
 			};
-
-			// port@1 {
-			// 	reg = <1>;
-
-			// 	panel_in_1: endpoint {
-			// 		remote-endpoint = <&mdss_dsi1_out>;
-			// 	};
-			// };
 		};
 	};
 
@@ -566,25 +561,6 @@
 &mdss_dsi0_phy {
 	vdds-supply = <&vreg_l5a_0p88>;
 	status = "okay";
-};
-
-&mdss_dsi1 {
-	vdda-supply = <&vreg_l9a_1p2>;
-	qcom,dual-dsi-mode;
-	qcom,sync-dual-dsi;
-	/* DSI1 is slave, so use DSI0 clocks */
-	assigned-clock-parents = <&mdss_dsi0_phy 0>, <&mdss_dsi0_phy 1>;
-	status = "disabled";
-};
-
-&mdss_dsi1_out {
-	data-lanes = <0 1 2 3>;
-	//remote-endpoint = <&panel_in_1>;
-};
-
-&mdss_dsi1_phy {
-	vdds-supply = <&vreg_l5a_0p88>;
-	status = "disabled";
 };
 
 &pm8150_adc {
@@ -805,6 +781,35 @@
 		drive-strength = <16>;
 		bias-pull-down;
 	};
+
+	panel_vout_pins: panel-vout-state {
+		pins = "gpio24";
+		function = "gpio";
+		drive-strength = <16>;
+		output-high;
+	};
+
+	ts_irq_active: ts_irq_active {
+		pins = "gpio39";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
+		input-enable;
+	};
+
+	tp_rst_active: ts_rst_active {
+		pins = "gpio38";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+	};
+
+	tp_rst_suspend: ts_rst_suspend {
+		pins = "gpio38";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-down;
+	};
 };
 
 &uart6 {
@@ -816,7 +821,6 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&bt_en_state>;
 
-		/* correct */
 		enable-gpios = <&tlmm 21 GPIO_ACTIVE_HIGH>;
 
 		vddio-supply = <&vreg_s4a_1p8>; /* Not sure where this comes from */
@@ -834,7 +838,6 @@
 	status = "okay";
 };
 
-/* correct */
 &ufs_mem_hc {
 	status = "okay";
 
@@ -846,7 +849,6 @@
 	vccq2-max-microamp = <800000>;
 };
 
-/* correct */
 &ufs_mem_phy {
 	status = "okay";
 
@@ -855,18 +857,12 @@
 };
 
 &usb_1 {
-	qcom,select-utmi-as-pipe-clk;
 	status = "okay";
 };
 
 &usb_1_dwc3 {
-	dr_mode = "otg";
-	//usb-role-switch;
+	dr_mode = "peripheral";
 };
-
-// &usb_1_role_switch_out {
-// 	remote-endpoint = <&pm8150b_role_switch_in>;
-// };
 
 &usb_1_hsphy {
 	status = "okay";
@@ -874,6 +870,13 @@
 	vdda-pll-supply = <&vreg_l5a_0p88>;
 	vdda33-supply = <&vreg_l2a_3p1>;
 	vdda18-supply = <&vreg_l12a_1p8>;
+};
+
+&usb_1_qmpphy {
+	status = "okay";
+
+	vdda-phy-supply = <&vreg_l9a_1p2>;
+	vdda-pll-supply = <&vreg_l18a_0p92>;
 };
 
 &venus {
@@ -899,9 +902,9 @@
 		self-powered;
 
 		source-pdos = <PDO_FIXED(5000, 3000,
-					 PDO_FIXED_DUAL_ROLE |
-					 PDO_FIXED_USB_COMM |
-					 PDO_FIXED_DATA_SWAP)>;
+					PDO_FIXED_DUAL_ROLE |
+					PDO_FIXED_USB_COMM |
+					PDO_FIXED_DATA_SWAP)>;
 
 		altmodes {
 			displayport {
