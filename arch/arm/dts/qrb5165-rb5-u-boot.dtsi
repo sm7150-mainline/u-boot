@@ -19,3 +19,7 @@
 &usb_2_dwc3 {
 	vbus-supply = <&vreg_l11c_3p3>;
 };
+
+&sdhc_2 {
+	status = "disabled";
+};
