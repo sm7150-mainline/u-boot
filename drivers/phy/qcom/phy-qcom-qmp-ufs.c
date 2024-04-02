@@ -585,6 +585,8 @@ static const struct qmp_ufs_cfg sm6115_ufsphy_cfg = {
 static const struct qmp_ufs_cfg sm8250_ufsphy_cfg = {
 	.lanes			= 2,
 
+	.offsets		= &qmp_ufs_offsets,
+
 	.tbls = {
 		.serdes		= sm8150_ufsphy_serdes,
 		.serdes_num	= ARRAY_SIZE(sm8150_ufsphy_serdes),
@@ -913,13 +915,35 @@ static int qmp_ufs_probe_dt_children(struct udevice *dev)
 {
 	int ret;
 	ofnode child;
+	struct qmp_ufs_priv *qmp = dev_get_priv(dev);
+	const struct qmp_ufs_offsets *offs = qmp->cfg->offsets;
+	bool have_children = false;
 
 	ofnode_for_each_subnode(child, dev_ofnode(dev)) {
+		have_children = true;
 		ret = qmp_ufs_probe_generic_child(dev, child);
 		if (ret) {
 			dev_err(dev, "Cannot parse child %s:%d\n",
 				ofnode_get_name(child), ret);
 			return ret;
+		}
+	}
+
+	if (!have_children && !offs) {
+		dev_err(dev, "Offsets must be provided via match data or DT.\n");
+		return -EINVAL;
+	}
+
+	/* Modern parsing with fixed offsets */
+	if (!have_children) {
+		qmp->serdes = qmp->serdes + offs->serdes;
+		qmp->pcs = qmp->serdes + offs->pcs;
+		qmp->tx = qmp->serdes + offs->tx;
+		qmp->rx = qmp->serdes + offs->rx;
+
+		if (qmp->cfg->lanes >= 2) {
+			qmp->tx2 = qmp->serdes + offs->tx2;
+			qmp->rx2 = qmp->serdes + offs->rx2;
 		}
 	}
 
