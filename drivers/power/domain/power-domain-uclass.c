@@ -169,7 +169,15 @@ static int dev_power_domain_ctrl(struct udevice *dev, bool on)
 
 int dev_power_domain_on(struct udevice *dev)
 {
-	return dev_power_domain_ctrl(dev, true);
+	int ret;
+	
+	ret = dev_power_domain_ctrl(dev, true);
+
+	if (ret)
+		log_err("%s: failed for '%s' with error: %d\n",
+			__func__, dev->name, ret);
+
+	return ret;
 }
 
 int dev_power_domain_off(struct udevice *dev)
