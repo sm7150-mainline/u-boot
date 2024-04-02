@@ -15,6 +15,14 @@
 			format = "a8r8g8b8";
 		};
 	};
+
+	/* When running as a first-stage bootloader or with embedded
+	 * DT we can't rely on this being populated for us.
+	 */
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0 0x80000000 0 0xfdfa0000>;
+	};
 };
 
 /* Needed for Linux to boot from USB, otherwise if PCIe driver is not in initramfs
