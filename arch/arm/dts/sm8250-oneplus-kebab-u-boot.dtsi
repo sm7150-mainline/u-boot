@@ -17,20 +17,8 @@
 		};
 	};
 
-	gpio-keys {
-		key-vol-up {
-			linux,code = <KEY_UP>;
-		};
-
-		key-vol-dowm {
-			linux,code = <KEY_DOWN>;
-		};
-	};
-
-	/* When running as the primary bootloader there is no prior
-	 * stage to populate the memory layout for us. We *should*
-	 * have two nodes here, but ABL does NOT like that.
-	 * sooo we're stuck with this.
+	/* When running as the primary bootloader or with DT embedded into U-Boot
+	 * ABL won't populate this for us.
 	 */
 	memory@80000000 {
 		device_type = "memory";
