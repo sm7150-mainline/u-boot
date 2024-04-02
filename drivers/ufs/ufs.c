@@ -534,7 +534,7 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
 {
 	int ret;
 	int retries = DME_LINKSTARTUP_RETRIES;
-	bool link_startup_again = true;
+	bool link_startup_again = false;
 
 link_startup:
 	do {
