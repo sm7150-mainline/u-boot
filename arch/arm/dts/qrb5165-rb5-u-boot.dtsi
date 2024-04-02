@@ -22,3 +22,7 @@
 
 /* Otherwise IOMMU stuff gets initialised for this and crash */
 /delete-node/ &crypto;
+
+&sdhc_2 {
+	status = "disabled";
+};
