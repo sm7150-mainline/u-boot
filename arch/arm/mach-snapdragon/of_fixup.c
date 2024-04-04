@@ -96,6 +96,15 @@ static int fixup_qcom_dwc3(struct device_node *glue_np)
 		return ret;
 	}
 
+	if (!of_get_property(dwc3, "dr_mode", NULL)) {
+		ret = of_write_prop(dwc3, "dr_mode", strlen("host"), "host");
+		if (ret) {
+			log_err("Failed to set 'dr_mode' property: %d\n", ret);
+			return ret;
+		}
+		printf("Set %s to host mode\n", dwc3->name);
+	}
+
 	return 0;
 }
 
