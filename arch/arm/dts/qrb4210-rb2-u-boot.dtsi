@@ -25,7 +25,3 @@
 &sdhc_2 {
 	status = "disabled";
 };
-
-&usb_dwc3 {
-	dr_mode = "host";
-};
