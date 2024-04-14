@@ -7,7 +7,6 @@
  * Based on Linux Kernel driver
  */
 
-#include <common.h>
 #include <clk-uclass.h>
 #include <dm.h>
 #include <linux/delay.h>
@@ -71,7 +70,8 @@ static ulong sm7150_clk_set_rate(struct clk *clk, ulong rate)
 	const struct freq_tbl *freq;
 
 	if (clk->id < priv->data->num_clks)
-		debug("%s: %s, requested rate=%ld\n", __func__, priv->data->clks[clk->id].name, rate);
+		debug("%s: %s, requested rate=%ld\n", __func__,
+			priv->data->clks[clk->id].name, rate);
 
 	switch (clk->id) {
 	case GCC_QUPV3_WRAP1_S2_CLK: /* UART8 */
@@ -178,14 +178,112 @@ static const struct qcom_reset_map sm7150_gcc_resets[] = {
 	[GCC_QUSB2PHY_PRIM_BCR] = { 0x26000 },
 };
 
+static const struct qcom_power_map sm7150_gdscs[] = {
+	[PCIE_0_GDSC] = { 0x6b004 },
+	[UFS_PHY_GDSC] = { 0x77004 },
+	[USB30_PRIM_GDSC] = { 0xf004 },
+	[HLOS1_VOTE_AGGRE_NOC_MMU_AUDIO_TBU_GDSC] = { 0x7d030 },
+	[HLOS1_VOTE_AGGRE_NOC_MMU_PCIE_TBU_GDSC] = { 0x7d03c },
+	[HLOS1_VOTE_AGGRE_NOC_MMU_TBU1_GDSC] = { 0x7d034 },
+	[HLOS1_VOTE_AGGRE_NOC_MMU_TBU2_GDSC] = { 0x7d038 },
+	[HLOS1_VOTE_MMNOC_MMU_TBU_HF0_GDSC] = { 0x7d040 },
+	[HLOS1_VOTE_MMNOC_MMU_TBU_HF1_GDSC] = { 0x7d048 },
+	[HLOS1_VOTE_MMNOC_MMU_TBU_SF_GDSC] = { 0x7d044 },
+};
+
+static const phys_addr_t sm7150_gpll_addrs[] = {
+	0x00100000, // GCC_GPLL0_MODE
+	0x00101000, // GCC_GPLL1_MODE /* unused */
+	0x00102000, // GCC_GPLL2_MODE /* unused */
+	0x00103000, // GCC_GPLL3_MODE /* unused */
+	0x00176000, // GCC_GPLL4_MODE /* unused */
+	0x00174000, // GCC_GPLL5_MODE /* unused */
+	0x00113000, // GCC_GPLL6_MODE /* unused */
+	0x00127000, // GCC_GPLL7_MODE
+};
+
+static const phys_addr_t sm7150_rcg_addrs[] = {
+	0x0010f010, // GCC_USB30_PRIM_MASTER
+	0x0010f018, // GCC_USB30_PRIM_MOCK_UTMI
+	0x0010f054, // GCC_USB3_PRIM_PHY_AUX
+	0x0011200c, // GCC_SDCC1_APPS
+	0x00112040, // GCC_SDCC1_ICE_CORE
+	0x00114004, // GCC_SDCC2_APPS
+	0x00116004, // GCC_SDCC4_APPS
+	0x00117014, // GCC_QUPV3_WRAP0_CORE_2X
+	0x00117030, // GCC_QUPV3_WRAP0_S0
+	0x00117160, // GCC_QUPV3_WRAP0_S1
+	0x00117290, // GCC_QUPV3_WRAP0_S2
+	0x001173c0, // GCC_QUPV3_WRAP0_S3
+	0x001174f0, // GCC_QUPV3_WRAP0_S4
+	0x00117620, // GCC_QUPV3_WRAP0_S5
+	0x00117750, // GCC_QUPV3_WRAP0_S6
+	0x00117880, // GCC_QUPV3_WRAP0_S7
+	0x00118014, // GCC_QUPV3_WRAP1_S0
+	0x00118144, // GCC_QUPV3_WRAP1_S1
+	0x00118274, // GCC_QUPV3_WRAP1_S2
+	0x001183a4, // GCC_QUPV3_WRAP1_S3
+	0x001184d4, // GCC_QUPV3_WRAP1_S4
+	0x00118604, // GCC_QUPV3_WRAP1_S5
+	0x00118734, // GCC_QUPV3_WRAP1_S6
+	0x00118864, // GCC_QUPV3_WRAP1_S7
+	0x0016f004, // GCC_PCIE_0_AUX
+	0x0016f02c, // GCC_PCIE_PHY_REFGEN
+	0x00177038, // GCC_UFS_PHY_AXI
+	0x00177090, // GCC_UFS_PHY_ICE_CORE
+	0x0017708c, // GCC_UFS_PHY_UNIPRO_CORE
+	0x00177094, // GCC_UFS_PHY_PHY_AUX
+};
+
+static const char *const sm7150_rcg_names[] = {
+	"GCC_USB30_PRIM_MASTER",
+	"GCC_USB30_PRIM_MOCK_UTMI",
+	"GCC_USB3_PRIM_PHY_AUX",
+	"GCC_SDCC1_APPS",
+	"GCC_SDCC1_ICE_CORE",
+	"GCC_SDCC2_APPS",
+	"GCC_SDCC4_APPS",
+	"GCC_QUPV3_WRAP0_CORE_2X",
+	"GCC_QUPV3_WRAP0_S0",
+	"GCC_QUPV3_WRAP0_S1",
+	"GCC_QUPV3_WRAP0_S2",
+	"GCC_QUPV3_WRAP0_S3",
+	"GCC_QUPV3_WRAP0_S4",
+	"GCC_QUPV3_WRAP0_S5",
+	"GCC_QUPV3_WRAP0_S6",
+	"GCC_QUPV3_WRAP0_S7",
+	"GCC_QUPV3_WRAP1_S0",
+	"GCC_QUPV3_WRAP1_S1",
+	"GCC_QUPV3_WRAP1_S2",
+	"GCC_QUPV3_WRAP1_S3",
+	"GCC_QUPV3_WRAP1_S4",
+	"GCC_QUPV3_WRAP1_S5",
+	"GCC_QUPV3_WRAP1_S6",
+	"GCC_QUPV3_WRAP1_S7",
+	"GCC_PCIE_0_AUX",
+	"GCC_PCIE_PHY_REFGEN",
+	"GCC_UFS_PHY_AXI",
+	"GCC_UFS_PHY_ICE_CORE",
+	"GCC_UFS_PHY_UNIPRO_CORE",
+	"GCC_UFS_PHY_PHY_AUX",
+};
+
 static struct msm_clk_data sm7150_gcc_data = {
 	.resets = sm7150_gcc_resets,
 	.num_resets = ARRAY_SIZE(sm7150_gcc_resets),
 	.clks = sm7150_clks,
 	.num_clks = ARRAY_SIZE(sm7150_clks),
+	.power_domains = sm7150_gdscs,
+	.num_power_domains = ARRAY_SIZE(sm7150_gdscs),
 
 	.enable = sm7150_clk_enable,
 	.set_rate = sm7150_clk_set_rate,
+
+	.dbg_pll_addrs = sm7150_gpll_addrs,
+	.num_plls = ARRAY_SIZE(sm7150_gpll_addrs),
+	.dbg_rcg_addrs = sm7150_rcg_addrs,
+	.num_rcgs = ARRAY_SIZE(sm7150_rcg_addrs),
+	.dbg_rcg_names = sm7150_rcg_names,
 };
 
 static const struct udevice_id gcc_sm7150_of_match[] = {
