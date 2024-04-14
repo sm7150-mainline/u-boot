@@ -25,6 +25,9 @@
 #define SE8_UART_APPS_CMD_RCGR			0x18278
 #define SDCC2_APPS_CLK_CMD_RCGR			0x1400c
 
+#define APCS_GPLL7_STATUS			0x27000
+#define APCS_GPLLX_ENA_REG			0x52000
+
 static const struct freq_tbl ftbl_gcc_qupv3_wrap0_s0_clk_src[] = {
 	F(7372800, CFG_CLK_SRC_GPLL0_EVEN, 1, 384, 15625),
 	F(14745600, CFG_CLK_SRC_GPLL0_EVEN, 1, 768, 15625),
@@ -55,6 +58,13 @@ static const struct freq_tbl ftbl_gcc_sdcc2_apps_clk_src[] = {
 	{ }
 };
 
+static const struct pll_vote_clk gpll7_vote_clk = {
+	.status = APCS_GPLL7_STATUS,
+	.status_bit = BIT(31),
+	.ena_vote = APCS_GPLLX_ENA_REG,
+	.vote_bit = BIT(7),
+};
+
 static ulong sm7150_clk_set_rate(struct clk *clk, ulong rate)
 {
 	struct msm_clk_priv *priv = dev_get_priv(clk->dev);
@@ -71,10 +81,10 @@ static ulong sm7150_clk_set_rate(struct clk *clk, ulong rate)
 		return freq->freq;
 	case GCC_SDCC2_APPS_CLK:
 		/* Enable GPLL7 so that we can point SDCC2_APPS_CLK_SRC at it */
-		//clk_enable_gpll0(priv->base, &gpll7_vote_clk);
+		clk_enable_gpll0(priv->base, &gpll7_vote_clk);
 		freq = qcom_find_freq(ftbl_gcc_sdcc2_apps_clk_src, rate);
 		printf("%s: got freq %u\n", __func__, freq->freq);
-		//WARN(freq->src != CFG_CLK_SRC_GPLL9, "SDCC2_APPS_CLK_SRC not set to GPLL7, requested rate %lu\n", rate);
+		WARN(freq->src != CFG_CLK_SRC_GPLL9, "SDCC2_APPS_CLK_SRC not set to GPLL7, requested rate %lu\n", rate);
 		clk_rcg_set_rate_mnd(priv->base, SDCC2_APPS_CLK_CMD_RCGR,
 						freq->pre_div, freq->m, freq->n, freq->src, 8);
 		return freq->freq;
