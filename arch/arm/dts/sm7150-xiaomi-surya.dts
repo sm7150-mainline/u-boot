@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * POCO X3 NFC (surya) board device tree source
+ *
+ * (C) Copyright 2024 Danila Tikhonov <danila@jiaxyga.com>
+ */
+
+/dts-v1/;
+
+#include "sm7150-xiaomi-common.dtsi"
+
+/ {
+	/*
+	 * Xiaomi POCO X3 (karna)
+	 * Xiaomi POCO X3 NFC (surya)
+	 */
+	model = "Xiaomi POCO X3";
+	compatible = "xiaomi,surya", "qcom,sm7150";
+
+	qcom,board-id = <34 0>;
+
+	reserved-memory {
+		rmtfs_mem: memory@fde01000 {
+			compatible = "qcom,rmtfs-mem";
+			reg = <0 0xfde01000 0 0x200000>;
+			no-map;
+
+			qcom,client-id = <1>;
+			qcom,vmid = <QCOM_SCM_VMID_MSS_MSA>;
+		};
+	};
+};
+
+&sdhc_2 {
+	//status = "okay";
+};
+
+&tlmm {
+	/* Reserved I/Os for FP */
+	gpio-reserved-ranges = <59 4>;
+};
