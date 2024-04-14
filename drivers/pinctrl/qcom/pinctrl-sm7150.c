@@ -12,17 +12,17 @@
 
 #include "pinctrl-qcom.h"
 
-#define NORTH	0x00500000
-#define SOUTH	0x00900000
-#define WEST	0x00100000
+#define WEST	0x00000000
+#define SOUTH	0x00400000
+#define NORTH	0x00800000
 
 #define MAX_PIN_NAME_LEN 32
 static char pin_name[MAX_PIN_NAME_LEN] __section(".data");
 
 static const struct pinctrl_function msm_pinctrl_functions[] = {
-	{"qup12", 1},
-	{"gpio",  0},
-	{"sdc2_clk", }
+	{ "qup12", 1 },
+	{ "gpio",  0 },
+	{ "sdc2_clk", 0 }
 };
 
 static const unsigned int sm7150_pin_offsets[] = {
@@ -55,7 +55,9 @@ static const unsigned int sm7150_pin_offsets[] = {
 	[104] = WEST,	[105] = NORTH,	[106] = NORTH,	[107] = WEST,
 	[108] = SOUTH,	[109] = SOUTH,	[110] = NORTH,	[111] = NORTH,
 	[112] = NORTH,	[113] = NORTH,	[114] = NORTH,	[115] = NORTH,
-	[116] = NORTH,	[117] = NORTH,	[118] = NORTH,
+	[116] = NORTH,	[117] = NORTH,	[118] = NORTH,	[119] = 0,
+	[120] = 0,	[121] = 0,	[122] = 0,	[123] = 0,
+	[124] = 0,	[125] = 0,	[126] = 0,
 };
 
 static const char *sm7150_get_function_name(struct udevice *dev,
@@ -71,7 +73,7 @@ static const char *sm7150_get_pin_name(struct udevice *dev,
 	return pin_name;
 }
 
-static unsigned int sm7150_get_function_mux(unsigned int selector)
+static unsigned int sm7150_get_function_mux(__maybe_unused unsigned int pin, unsigned int selector)
 {
 	return msm_pinctrl_functions[selector].val;
 }
@@ -80,6 +82,7 @@ static struct msm_pinctrl_data sm7150_data = {
 	.pin_data = {
 		.pin_offsets = sm7150_pin_offsets,
 		.pin_count = ARRAY_SIZE(sm7150_pin_offsets),
+		.special_pins_start = 119,
 	},
 	.functions_count = ARRAY_SIZE(msm_pinctrl_functions),
 	.get_function_name = sm7150_get_function_name,
