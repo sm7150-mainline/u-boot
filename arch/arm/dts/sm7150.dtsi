@@ -1743,10 +1743,7 @@
 
 		tlmm: pinctrl@3500000 {
 			compatible = "qcom,sm7150-tlmm";
-			reg = <0 0x03500000 0 0x300000>,
-			      <0 0x03900000 0 0x300000>,
-			      <0 0x03d00000 0 0x300000>;
-			reg-names = "west", "north", "south";
+			reg = <0 0x03500000 0 0x900000>;
 			interrupts = <GIC_SPI 208 IRQ_TYPE_LEVEL_HIGH>;
 			gpio-controller;
 			#gpio-cells = <2>;
