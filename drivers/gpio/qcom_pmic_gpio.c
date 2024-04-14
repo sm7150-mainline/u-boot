@@ -323,6 +323,7 @@ static const struct udevice_id qcom_gpio_ids[] = {
 	{ .compatible = "qcom,pm8998-gpio", .data = PMIC_MATCH_READONLY },
 	{ .compatible = "qcom,pms405-gpio" },
 	{ .compatible = "qcom,pm7325-gpio", .data = PMIC_MATCH_READONLY },
+	{ .compatible = "qcom,pm6150l-gpio", .data = PMIC_MATCH_READONLY },	/* 12 GPIO's */
 	{ }
 };
 
