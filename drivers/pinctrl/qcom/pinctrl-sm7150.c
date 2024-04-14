@@ -7,7 +7,6 @@
  * Based on Linux Kernel driver
  */
 
-#include <common.h>
 #include <dm.h>
 
 #include "pinctrl-qcom.h"
@@ -22,7 +21,7 @@ static char pin_name[MAX_PIN_NAME_LEN] __section(".data");
 static const struct pinctrl_function msm_pinctrl_functions[] = {
 	{ "qup12", 1 },
 	{ "gpio",  0 },
-	{ "sdc2_clk", 0 } /* special pin GPIO124 */
+	/*{ "sdc2_clk", 0 } /* special pin GPIO124 */
 };
 
 static const unsigned int sm7150_pin_offsets[] = {
@@ -55,7 +54,9 @@ static const unsigned int sm7150_pin_offsets[] = {
 	[104] = WEST,	[105] = NORTH,	[106] = NORTH,	[107] = WEST,
 	[108] = SOUTH,	[109] = SOUTH,	[110] = NORTH,	[111] = NORTH,
 	[112] = NORTH,	[113] = NORTH,	[114] = NORTH,	[115] = NORTH,
-	[116] = NORTH,	[117] = NORTH,	[118] = NORTH,
+	[116] = NORTH,	[117] = NORTH,	[118] = NORTH,	[119] = 0,
+	[120] = 0,	[121] = 0,	[122] = 0,	[123] = 0,
+	[124] = 0,	[125] = 0,	[126] = 0,
 };
 
 static const char *sm7150_get_function_name(struct udevice *dev,
@@ -67,12 +68,20 @@ static const char *sm7150_get_function_name(struct udevice *dev,
 static const char *sm7150_get_pin_name(struct udevice *dev,
 					unsigned int selector)
 {
-	snprintf(pin_name, MAX_PIN_NAME_LEN, "gpio%u", selector);
+	static const char *special_pins_names[] = {
+		"ufs_reset", "sdc1_rclk", "sdc1_clk", "sdc1_cmd",
+		"sdc1_data", "sdc2_clk",  "sdc2_cmd", "sdc2_data",
+	};
+
+	if (selector >= 119 && selector <= 126)
+		snprintf(pin_name, MAX_PIN_NAME_LEN, special_pins_names[selector - 119]);
+	else
+		snprintf(pin_name, MAX_PIN_NAME_LEN, "gpio%u", selector);
 
 	return pin_name;
 }
 
-static unsigned int sm7150_get_function_mux(unsigned int selector)
+static unsigned int sm7150_get_function_mux(__maybe_unused unsigned int pin, unsigned int selector)
 {
 	return msm_pinctrl_functions[selector].val;
 }
@@ -81,6 +90,7 @@ static struct msm_pinctrl_data sm7150_data = {
 	.pin_data = {
 		.pin_offsets = sm7150_pin_offsets,
 		.pin_count = ARRAY_SIZE(sm7150_pin_offsets),
+		.special_pins_start = 119,
 	},
 	.functions_count = ARRAY_SIZE(msm_pinctrl_functions),
 	.get_function_name = sm7150_get_function_name,
