@@ -16,11 +16,11 @@
  /delete-node/ &gpu_mem;
 
  &adsp_mem {
-         reg = <0x0 0x95700000 0x0 0x2600000>;
+	reg = <0x0 0x95700000 0x0 0x2600000>;
  };
 
  &cont_splash_mem {
-         reg = <0x0 0x9c000000 0x0 (1080 * 2340 * 4)>;
+	reg = <0x0 0x9c000000 0x0 (1080 * 2340 * 4)>;
  };
 
  /*
@@ -29,7 +29,7 @@
   */
 
  &cpu6_opp14 {
-         status = "disabled";
+	status = "disabled";
  };
 
  / {
@@ -37,12 +37,12 @@
 	 * Xiaomi Mi 9T
 	 * Xiaomi Redmi K20
 	 */
-         model = "Xiaomi Mi 9T";
-         compatible = "xiaomi,davinci", "qcom,sm7150";
+	model = "Xiaomi Mi 9T";
+	compatible = "xiaomi,davinci", "qcom,sm7150";
 
-         qcom,board-id = <40 0>;
+	qcom,board-id = <40 0>;
 
-         reserved-memory {
+	reserved-memory {
 		wlan_msa_mem: memory@97d00000 {
 			reg = <0x0 0x97d00000 0x0 0x180000>;
 			no-map;
