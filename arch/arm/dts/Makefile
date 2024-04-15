@@ -611,6 +611,7 @@ dtb-$(CONFIG_ARCH_SNAPDRAGON) += dragonboard410c.dtb \
 	sdm845-xiaomi-beryllium-ebbg.dtb \
 	sdm845-xiaomi-beryllium-tianma.dtb \
 	sm7150-xiaomi-davinci.dtb \
+	sm7150-xiaomi-courbet.dtb \
 	sm7150-xiaomi-surya.dtb \
 	rb1.dtb \
 	rb2.dtb \
