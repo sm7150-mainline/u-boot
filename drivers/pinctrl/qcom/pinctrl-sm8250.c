@@ -18,7 +18,11 @@
 static char pin_name[MAX_PIN_NAME_LEN] __section(".data");
 
 static const struct pinctrl_function msm_pinctrl_functions[] = { { "qup12", 1 },
-								 { "gpio", 0 }, };
+								 { "gpio", 0 },
+								 { "qup13", 1 },
+								 { "gpio", 0 },
+								 { "sdc2_clk", 0 } };
+
 #define SDC_PINGROUP(pg_name, ctl, pull, drv)		\
 	{						\
 		.name = pg_name,			\
@@ -49,7 +53,7 @@ static const struct msm_special_pin_data sm8250_special_pins_data[] = {
 	[2] = SDC_PINGROUP("sdc2_cmd", NORTH + 0xb7000, 11, 3),
 	[3] = SDC_PINGROUP("sdc2_data", NORTH + 0xb7000, 9, 0),
 };
-
+								 
 static const unsigned int sm8250_pin_offsets[] = {
 	[0] = SOUTH,   [1] = SOUTH,   [2] = SOUTH,   [3] = SOUTH,   [4] = NORTH,   [5] = NORTH,
 	[6] = NORTH,   [7] = NORTH,   [8] = NORTH,   [9] = NORTH,   [10] = NORTH,  [11] = NORTH,
