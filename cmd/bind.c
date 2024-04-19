@@ -12,7 +12,7 @@
 #include <dm/uclass-internal.h>
 
 static int bind_by_class_index(const char *uclass, int index,
-			       const char *drv_name)
+			       const char *drv_name, bool probe)
 {
 	static enum uclass_id uclass_id;
 	struct udevice *dev;
@@ -45,6 +45,13 @@ static int bind_by_class_index(const char *uclass, int index,
 		return ret;
 	}
 
+	if (probe) {
+		ret = device_probe(dev);
+		if (ret) {
+			printf("Unable to probe. err:%d\n", ret);
+			return ret;
+		}
+	}
 	return 0;
 }
 
@@ -120,7 +127,7 @@ static int unbind_child_by_class_index(const char *uclass, int index,
 	return ret;
 }
 
-static int bind_by_node_path(const char *path, const char *drv_name)
+static int bind_by_node_path(const char *path, const char *drv_name, bool probe)
 {
 	struct udevice *dev;
 	struct udevice *parent = NULL;
@@ -157,6 +164,14 @@ static int bind_by_node_path(const char *path, const char *drv_name)
 	if (!dev || ret) {
 		printf("Unable to bind. err:%d\n", ret);
 		return ret;
+	}
+
+	if (probe) {
+		ret = device_probe(dev);
+		if (ret) {
+			printf("Unable to probe. err:%d\n", ret);
+			return ret;
+		}
 	}
 
 	return 0;
@@ -202,35 +217,44 @@ static int do_bind_unbind(struct cmd_tbl *cmdtp, int flag, int argc,
 	int ret = 0;
 	bool bind;
 	bool by_node;
+	bool probe = false;
+	int idx = 1;
 
 	if (argc < 2)
 		return CMD_RET_USAGE;
 
+	if (argc > 2) {
+		if (!strcmp(argv[1], "-p")) {
+			probe = true;
+			idx++;
+		}
+	}
+
 	bind = (argv[0][0] == 'b');
-	by_node = (argv[1][0] == '/');
+	by_node = (argv[idx][0] == '/');
 
 	if (by_node && bind) {
 		if (argc != 3)
 			return CMD_RET_USAGE;
-		ret = bind_by_node_path(argv[1], argv[2]);
+		ret = bind_by_node_path(argv[idx], argv[idx+1], probe);
 	} else if (by_node && !bind) {
 		if (argc != 2)
 			return CMD_RET_USAGE;
-		ret = unbind_by_node_path(argv[1]);
+		ret = unbind_by_node_path(argv[idx]);
 	} else if (!by_node && bind) {
-		int index = (argc > 2) ? dectoul(argv[2], NULL) : 0;
+		int index = (argc > 2) ? dectoul(argv[idx+1], NULL) : 0;
 
 		if (argc != 4)
 			return CMD_RET_USAGE;
-		ret = bind_by_class_index(argv[1], index, argv[3]);
+		ret = bind_by_class_index(argv[idx], index, argv[3], probe);
 	} else if (!by_node && !bind) {
-		int index = (argc > 2) ? dectoul(argv[2], NULL) : 0;
+		int index = (argc > 2) ? dectoul(argv[idx+1], NULL) : 0;
 
 		if (argc == 3)
-			ret = unbind_by_class_index(argv[1], index);
+			ret = unbind_by_class_index(argv[idx], index);
 		else if (argc == 4)
-			ret = unbind_child_by_class_index(argv[1], index,
-							  argv[3]);
+			ret = unbind_child_by_class_index(argv[idx], index,
+							  argv[idx+2]);
 		else
 			return CMD_RET_USAGE;
 	}
@@ -244,8 +268,9 @@ static int do_bind_unbind(struct cmd_tbl *cmdtp, int flag, int argc,
 U_BOOT_CMD(
 	bind,	4,	0,	do_bind_unbind,
 	"Bind a device to a driver",
-	"<node path> <driver>\n"
-	"bind <class> <index> <driver>\n"
+	"[-p] <node path> <driver>\n"
+	"bind [-p] <class> <index> <driver>\n"
+	"  -p: probe the device after binding\n"
 	"Use 'dm tree' to list all devices registered in the driver model,\n"
 	"their path, class, index and current driver.\n"
 );
