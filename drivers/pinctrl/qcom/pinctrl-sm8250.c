@@ -18,6 +18,7 @@
 static char pin_name[MAX_PIN_NAME_LEN] __section(".data");
 
 static const struct pinctrl_function msm_pinctrl_functions[] = { { "qup12", 1 },
+								 { "qup13", 1 },
 								 { "gpio", 0 },
 								 { "sdc2_clk", 0 } };
 
