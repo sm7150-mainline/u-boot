@@ -7,4 +7,10 @@ menuconfig TOUCHSCREEN
 
 if TOUCHSCREEN
 
+config TOUCHSCREEN_SYNAPTICS_S3908
+	bool "Synaptics S3908 touchscreen"
+	depends on TOUCHSCREEN && I2C
+	help
+	  Say Y here if you have a Synaptics S3908 touchscreen.
+
 endif
