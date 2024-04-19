@@ -15,3 +15,5 @@ obj-$(CONFIG_I8042_KEYB) += i8042.o
 obj-$(CONFIG_TEGRA_KEYBOARD) += input.o tegra-kbc.o
 obj-$(CONFIG_TWL4030_INPUT) += twl4030.o
 endif
+
+obj-$(CONFIG_TOUCHSCREEN) += touchscreen/

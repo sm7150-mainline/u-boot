@@ -1,0 +1,10 @@
+menuconfig TOUCHSCREEN
+	bool "Touchscreen support"
+	default n
+	depends on INPUT
+	help
+	  Enable support for touchscreens.
+
+if TOUCHSCREEN
+
+endif
