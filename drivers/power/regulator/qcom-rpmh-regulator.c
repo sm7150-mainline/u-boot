@@ -371,6 +371,15 @@ static struct dm_regulator_mode pmic_mode_map_pmic5_ldo[] = {
 	},
 };
 
+static const struct rpmh_vreg_hw_data pmic5_pldo_lv = {
+	.regulator_type = VRM,
+	.ops = &rpmh_regulator_vrm_drms_ops,
+	.voltage_range = REGULATOR_LINEAR_RANGE(1504000, 0, 62, 8000),
+	.n_voltages = 63,
+	.hpm_min_load_uA = 10000,
+	.pmic_mode_map = pmic_mode_map_pmic5_ldo,
+};
+
 static const struct rpmh_vreg_hw_data pmic5_pldo = {
 	.regulator_type = VRM,
 	.ops = &rpmh_regulator_vrm_drms_ops,
@@ -389,7 +398,12 @@ static const struct rpmh_vreg_hw_data pmic5_pldo = {
 	.supply_name	= _supply_name, \
 }
 
+static const struct rpmh_vreg_init_data pm8150_vreg_data[] = {
+	RPMH_VREG("ldo13",  "ldo%s13", &pmic5_pldo,      "vdd-l13-l16-l17"),
+};
+
 static const struct rpmh_vreg_init_data pm8150l_vreg_data[] = {
+	RPMH_VREG("ldo1",   "ldo%s1",  &pmic5_pldo_lv,   "vdd-l1-l8"),
 	RPMH_VREG("ldo11",  "ldo%s11", &pmic5_pldo,      "vdd-l7-l11"),
 	{}
 };
@@ -441,7 +455,7 @@ U_BOOT_DRIVER(rpmh_regulator_drm) = {
  */
 static const struct rpmh_vreg_init_data *
 vreg_get_init_data(const struct rpmh_vreg_init_data *init_data, ofnode node) {
-        const struct rpmh_vreg_init_data *data;
+		   const struct rpmh_vreg_init_data *data;
 
 	for(data = init_data; data->name; data++) {
 		if (!strcmp(data->name, ofnode_get_name(node)))
@@ -497,6 +511,10 @@ static int rpmh_regulators_bind(struct udevice *dev)
 }
 
 static const struct udevice_id rpmh_regulator_ids[] = {
+	{
+		.compatible = "qcom,pm8150-rpmh-regulators",
+		.data = (ulong)pm8150_vreg_data,
+	},
 	{
 		.compatible = "qcom,pm8150l-rpmh-regulators",
 		.data = (ulong)pm8150l_vreg_data,
