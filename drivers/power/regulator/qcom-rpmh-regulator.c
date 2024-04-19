@@ -444,7 +444,7 @@ vreg_get_init_data(const struct rpmh_vreg_init_data *init_data, ofnode node) {
         const struct rpmh_vreg_init_data *data;
 
 	for(data = init_data; data->name; data++) {
-		if (!strncmp(data->name, ofnode_get_name(node), strlen(data->name)))
+		if (!strcmp(data->name, ofnode_get_name(node)))
 			return data;
 	}
 
