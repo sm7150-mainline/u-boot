@@ -16,6 +16,7 @@
 #include <scsi.h>
 #include <part.h>
 #include <linux/err.h>
+#include <time.h>
 
 #include "qcom-priv.h"
 
@@ -88,6 +89,63 @@ static int find_boot_partition(const char *partname, struct blk_desc *blk_dev, c
 	return -1;
 }
 
+static bool u16_strendswith(const u16 *in, const u16 *suffix)
+{
+	int in_len = u16_strlen(in);
+	int suffix_len = u16_strlen(suffix);
+
+	if (in_len < suffix_len)
+		return false;
+
+	return !u16_strcmp(in + in_len - suffix_len, suffix);
+}
+
+/* Patch the slot status GPT attributes to prevent ABL from switching slots */
+static int patch_slot_status(struct blk_desc *desc)
+{
+	struct gpt_table tbl;
+	int ret;
+	u16 tmp;
+
+	ret = gpt_table_load(desc, &tbl);
+	if (ret) {
+		log_err("Failed to load GPT table: %d\n", ret);
+		return -1;
+	}
+
+	for (int i = 0; i < tbl.header.num_partition_entries; i++) {
+		gpt_entry *entry = &tbl.entries[i];
+		struct part_slot_status *slot_status;
+
+		/* Check if partition name ends in _a or _b */
+		if (!u16_strendswith(entry->partition_name, u"_a") &&
+		    !u16_strendswith(entry->partition_name, u"_b"))
+			continue;
+
+		log_io("Patching slot status for %ls\n", entry->partition_name);
+
+		/* Patch the slot status */
+		tmp = entry->attributes.fields.type_guid_specific;
+		slot_status = (struct part_slot_status *)&tmp;
+
+		slot_status->successful = 1;
+		slot_status->unbootable = 0;
+		slot_status->tries_remaining = 7;
+
+		entry->attributes.fields.type_guid_specific = tmp;
+	}
+
+	ret = gpt_table_write(&tbl);
+	if (ret) {
+		log_err("Failed to write GPT table: %d\n", ret);
+		return -1;
+	}
+
+	gpt_table_free(&tbl);
+
+	return 0;
+}
+
 /**
  * qcom_configure_capsule_updates() - Configure the DFU string for capsule updates
  *
@@ -150,4 +208,8 @@ void qcom_configure_capsule_updates(void)
 	log_debug("boot partition is %s, DFU string: '%s'\n", name, dfu_string);
 
 	update_info.dfu_string = dfu_string;
+
+	// ret = patch_slot_status(desc);
+	// if (ret)
+	// 	log_err("Failed to patch slot status\n");
 }
