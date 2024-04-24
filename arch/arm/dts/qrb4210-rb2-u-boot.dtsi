@@ -13,6 +13,11 @@
 	};
 };
 
+/* The Qualcomm crypto driver is really broken */
+&crypto {
+	status = "disabled";
+};
+
 /* This is not supported */
 &sdhc_2 {
 	status = "disabled";
