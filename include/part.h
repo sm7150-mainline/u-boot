@@ -499,6 +499,40 @@ struct part_driver {
 
 #if CONFIG_IS_ENABLED(EFI_PARTITION)
 /* disk/part_efi.c */
+
+
+struct gpt_table {
+	gpt_header header;
+	struct blk_desc *desc;
+	gpt_entry *entries; /* heap allocated array of {header.num_partition_entries} partitions */
+};
+
+/**
+ * gpt_table_load() - Load the GUID Partition Table from disk and populate @tbl
+ *
+ * @desc:	pointer to the block device descriptor
+ * @tbl:	pointer to the GPT table structure
+ *
+ * Return:	0 on success, otherwise error
+ */
+int gpt_table_load(struct blk_desc *desc, struct gpt_table *tbl);
+
+/**
+ * gpt_table_write() - Write back the modified GPT table to disk
+ *
+ * @tbl:	pointer to the GPT table structure
+ *
+ * Return:	0 on success, otherwise error
+ */
+int gpt_table_write(struct gpt_table *tbl);
+
+/**
+ * gpt_table_free() - Free the memory allocated for the GPT table
+ *
+ * @tbl:	pointer to the GPT table structure
+ */
+void gpt_table_free(struct gpt_table *tbl);
+
 /**
  * write_gpt_table() - Write the GUID Partition Table to disk
  *

@@ -878,6 +878,38 @@ int gpt_verify_partitions(struct blk_desc *desc,
 	return 0;
 }
 
+int gpt_table_load(struct blk_desc *desc, struct gpt_table *tbl)
+{
+	ALLOC_CACHE_ALIGN_BUFFER_PAD(gpt_header, gpt_head, 1, desc->blksz);
+
+	/* This function validates AND fills in the GPT header and PTE */
+	if (find_valid_gpt(desc, gpt_head, &tbl->entries) != 1)
+		return -EINVAL;
+
+	memcpy(&tbl->header, gpt_head, sizeof(gpt_header));
+	tbl->desc = desc;
+
+	return 0;
+};
+
+int gpt_table_write(struct gpt_table *tbl)
+{
+	ALLOC_CACHE_ALIGN_BUFFER_PAD(gpt_header, gpt_head, 1, tbl->desc->blksz);
+	int ret;
+
+	/* write_gpt_table() assumed that the header is padded to blksz... */
+	memcpy(gpt_head, &tbl->header, sizeof(gpt_header));
+
+	ret = write_gpt_table(tbl->desc, gpt_head, tbl->entries);
+
+	return 0;
+}
+
+void gpt_table_free(struct gpt_table *tbl)
+{
+	free(tbl->entries);
+}
+
 int is_valid_gpt_buf(struct blk_desc *desc, void *buf)
 {
 	gpt_header *gpt_h;
