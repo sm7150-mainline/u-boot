@@ -450,17 +450,41 @@ struct dwc3_glue_ops ti_ops = {
 #define SDM845_QSCRATCH_SIZE 0x400
 #define SDM845_DWC3_CORE_SIZE 0xcd00
 
+static inline void qcom_setbits(void __iomem *base, u32 offset, u32 val)
+{
+	u32 reg;
+
+	reg = readl(base + offset);
+	reg |= val;
+	writel(reg, base + offset);
+
+	/* Ensure above write is completed */
+	readl(base + offset);
+}
+
+static inline void qcom_clrbits(void __iomem *base, u32 offset, u32 val)
+{
+	u32 reg;
+
+	reg = readl(base + offset);
+	reg &= ~val;
+	writel(reg, base + offset);
+
+	/* Ensure above write is completed */
+	readl(base + offset);
+}
+
 static void dwc3_qcom_vbus_override_enable(void __iomem *qscratch_base, bool enable)
 {
 	if (enable) {
-		setbits_le32(qscratch_base + QSCRATCH_SS_PHY_CTRL,
+		qcom_setbits(qscratch_base, QSCRATCH_SS_PHY_CTRL,
 				  LANE0_PWR_PRESENT);
-		setbits_le32(qscratch_base + QSCRATCH_HS_PHY_CTRL,
+		qcom_setbits(qscratch_base, QSCRATCH_HS_PHY_CTRL,
 				  UTMI_OTG_VBUS_VALID | SW_SESSVLD_SEL);
 	} else {
-		clrbits_le32(qscratch_base + QSCRATCH_SS_PHY_CTRL,
+		qcom_clrbits(qscratch_base, QSCRATCH_SS_PHY_CTRL,
 				  LANE0_PWR_PRESENT);
-		clrbits_le32(qscratch_base + QSCRATCH_HS_PHY_CTRL,
+		qcom_clrbits(qscratch_base, QSCRATCH_HS_PHY_CTRL,
 				  UTMI_OTG_VBUS_VALID | SW_SESSVLD_SEL);
 	}
 }
@@ -469,13 +493,13 @@ static void dwc3_qcom_vbus_override_enable(void __iomem *qscratch_base, bool ena
 static void dwc3_qcom_select_utmi_clk(void __iomem *qscratch_base)
 {
 	/* Configure dwc3 to use UTMI clock as PIPE clock not present */
-	setbits_le32(qscratch_base + QSCRATCH_GENERAL_CFG,
+	qcom_setbits(qscratch_base, QSCRATCH_GENERAL_CFG,
 			  PIPE_UTMI_CLK_DIS);
 
-	setbits_le32(qscratch_base + QSCRATCH_GENERAL_CFG,
+	qcom_setbits(qscratch_base, QSCRATCH_GENERAL_CFG,
 			  PIPE_UTMI_CLK_SEL | PIPE3_PHYSTATUS_SW);
 
-	clrbits_le32(qscratch_base + QSCRATCH_GENERAL_CFG,
+	qcom_clrbits(qscratch_base, QSCRATCH_GENERAL_CFG,
 			  PIPE_UTMI_CLK_DIS);
 }
 
