@@ -209,7 +209,8 @@ void qcom_configure_capsule_updates(void)
 
 	update_info.dfu_string = dfu_string;
 
-	if (of_machine_is_compatible("qcom,qrb4210-rb2")) {
+	if (of_machine_is_compatible("qcom,qrb4210-rb2") ||
+	    of_machine_is_compatible("oneplus,kebab")) {
 		ret = patch_slot_status(desc);
 		if (ret)
 			log_err("Failed to patch slot status\n");
