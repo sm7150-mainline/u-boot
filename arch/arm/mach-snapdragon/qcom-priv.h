@@ -23,4 +23,6 @@ static inline void qcom_of_fixup_nodes(void)
 }
 #endif /* OF_LIVE */
 
+void gunyah_init(void);
+
 #endif /* __QCOM_PRIV_H__ */
