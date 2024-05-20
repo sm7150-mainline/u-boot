@@ -28,6 +28,7 @@
 #include <linux/sizes.h>
 #include <lmb.h>
 #include <malloc.h>
+#include <net.h>
 #include <fdt_support.h>
 #include <usb.h>
 #include <sort.h>
@@ -303,6 +304,33 @@ void qcom_set_serialno(void)
 		env_set("serial#", serial);
 }
 
+static void qcom_set_mac_addr(void)
+{
+	u32 serialno;
+	u8 mac[ARP_HLEN];
+	/* use locally adminstrated pool */
+	mac[0] = 0x02;
+	mac[1] = 0x00;
+	char mac_str[ARP_HLEN_ASCII + 1];
+
+	serialno = env_get_hex("serial#", 0xc001beef);
+	if (serialno == 0xc001beef) {
+		log_warning("Using fallback mac address!\n");
+		return;
+	}
+
+	/*
+	 * Put the 32-bit serial number in the last 32-bit of the MAC address.
+	 * Use big endian order so it is consistent with the serial number
+	 * written as a hexadecimal string, e.g. 0x1234abcd -> 02:00:12:34:ab:cd
+	 */
+	put_unaligned_be32(serialno, &mac[2]);
+
+	snprintf(mac_str, sizeof(mac_str), "%pM", mac);
+	env_set("ethaddr", mac_str);
+}
+
+
 /* Sets up the "board", and "soc" environment variables as well as constructing the devicetree
  * path, with a few quirks to handle non-standard dtb filenames. This is not meant to be a
  * comprehensive solution to automatically picking the DTB, but aims to be correct for the
@@ -446,6 +474,7 @@ int board_late_init(void)
 	memcpy((void *)addr, (void *)gd->fdt_blob, fdt32_to_cpu(fdt_blob->totalsize));
 
 	configure_env();
+	qcom_set_mac_addr();
 	qcom_late_init();
 
 	/* Configure the dfu_string for capsule updates */
