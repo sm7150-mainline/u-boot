@@ -385,7 +385,9 @@ void print_mmc_devices(char separator)
 	     uclass_next_device(&dev), first = false) {
 		struct mmc *m = mmc_get_mmc_dev(dev);
 
-		if (!first) {
+		if (first) {
+			printf("MMC:  ");
+		} else {
 			printf("%c", separator);
 			if (separator != '\n')
 				puts(" ");
