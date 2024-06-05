@@ -618,6 +618,31 @@ static void carve_out_reserved_memory(void)
 	}
 }
 
+static void map_framebuffer(void)
+{
+	ofnode node;
+	phys_addr_t addr, size;
+
+	node = ofnode_path("/chosen/framebuffer");
+	if (!ofnode_valid(node))
+		return;
+
+	/* Map the framebuffer as normal memory */
+	addr = ofnode_get_addr_size(node, "reg", &size);
+	if (addr == OF_BAD_ADDR || size == 0) {
+		log_err("Invalid framebuffer address/size\n");
+		return;
+	}
+
+	/* The size might be some precise resolution, make sure it's something
+	 * more sensible for the MMU code.
+	 */
+	size = ALIGN(size, SZ_2M);
+
+	debug("Mapping framebuffer at 0x%llx size 0x%llx\n", addr, size);
+	mmu_map_region(addr, size, true);
+}
+
 /* This function open-codes setup_all_pgtables() so that we can
  * insert additional mappings *before* turning on the MMU.
  */
@@ -657,4 +682,7 @@ void enable_caches(void)
 		debug("carveout time: %lums\n", get_timer(carveout_start));
 	}
 	dcache_enable();
+
+	/* Some boards don't include the splash region in the memory map... */
+	map_framebuffer();
 }
