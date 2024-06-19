@@ -133,6 +133,8 @@ static int patch_slot_status(struct blk_desc *desc)
 		slot_status->tries_remaining = 7;
 
 		entry->attributes.fields.type_guid_specific = tmp;
+		//if (u16_strncmp(u"esp", entry->partition_name, 3) == 0)
+			
 	}
 
 	ret = gpt_table_write(&tbl);
