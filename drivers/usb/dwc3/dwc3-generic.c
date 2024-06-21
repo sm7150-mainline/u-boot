@@ -50,6 +50,44 @@ struct dwc3_generic_host_priv {
 	struct udevice *vbus_supply;
 };
 
+/**
+ * dwc3_get_preferred_dr_mode() - Get the preferred DR mode for the USB node
+ *
+ * Since we don't support dynamic role switching yet in dwc3, this is a slightly
+ * opinionated wrapper around usb_get_dr_mode() which will respect the
+ * role-switch-default-mode property if it is present and the dr_mode is OTG.
+ *
+ * @child: Node to get the DR mode for
+ */
+static enum usb_dr_mode dwc3_get_preferred_dr_mode(ofnode node)
+{
+	enum usb_dr_mode mode;
+	bool is_role_switch = ofnode_has_property(node, "usb-role-switch");
+
+	mode = usb_get_dr_mode(node);
+	/* Attempt to search the parent node too */
+	if (mode == USB_DR_MODE_UNKNOWN) {
+		node = ofnode_get_parent(node);
+		mode = usb_get_dr_mode(node);
+		is_role_switch |= ofnode_has_property(node, "usb-role-switch");
+	}
+
+	/* If the usb-role-switch property is present, but dr_mode isn't, then the
+	 * default is OTG.
+	 */
+	if (is_role_switch && mode == USB_DR_MODE_UNKNOWN)
+		mode = USB_DR_MODE_OTG;
+
+	/* Respect the role-switch-default-mode property */
+	if (mode == USB_DR_MODE_OTG && is_role_switch) {
+		mode = usb_get_role_switch_default_mode(node);
+		if (mode == USB_DR_MODE_UNKNOWN)
+			mode = USB_DR_MODE_OTG;
+	}
+
+	return mode;
+}
+
 static int dwc3_generic_probe(struct udevice *dev,
 			      struct dwc3_generic_priv *priv,
 			      enum usb_dr_mode mode)
@@ -179,15 +217,10 @@ static int dwc3_generic_of_to_plat(struct udevice *dev)
 		plat->maximum_speed = USB_SPEED_SUPER;
 	}
 
-	plat->dr_mode = usb_get_dr_mode(node);
+	plat->dr_mode = dwc3_get_preferred_dr_mode(node);
 	if (plat->dr_mode == USB_DR_MODE_UNKNOWN) {
-		/* might be a leaf so check the parent for mode */
-		node = dev_ofnode(dev->parent);
-		plat->dr_mode = usb_get_dr_mode(node);
-		if (plat->dr_mode == USB_DR_MODE_UNKNOWN) {
-			pr_err("Invalid usb mode setup\n");
-			return -ENODEV;
-		}
+		pr_err("Invalid usb mode setup\n");
+		return -ENODEV;
 	}
 
 	return 0;
@@ -547,10 +580,7 @@ static int dwc3_glue_bind_common(struct udevice *parent, ofnode node)
 
 	debug("%s: subnode name: %s\n", __func__, name);
 
-	/* if the parent node doesn't have a mode check the leaf */
-	dr_mode = usb_get_dr_mode(dev_ofnode(parent));
-	if (!dr_mode)
-		dr_mode = usb_get_dr_mode(node);
+	dr_mode = dwc3_get_preferred_dr_mode(node);
 
 	if (CONFIG_IS_ENABLED(DM_USB_GADGET) &&
 	    (dr_mode == USB_DR_MODE_PERIPHERAL || dr_mode == USB_DR_MODE_OTG)) {
@@ -704,7 +734,7 @@ int dwc3_glue_probe(struct udevice *dev)
 	while (child) {
 		enum usb_dr_mode dr_mode;
 
-		dr_mode = usb_get_dr_mode(dev_ofnode(child));
+		dr_mode = dwc3_get_preferred_dr_mode(dev_ofnode(child));
 		device_find_next_child(&child);
 		if (ops && ops->glue_configure)
 			ops->glue_configure(dev, index, dr_mode);
