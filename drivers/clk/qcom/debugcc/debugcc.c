@@ -231,6 +231,9 @@ static const struct debugcc_platform *find_platform(void)
 		}
 	}
 
+	if (!strcmp("sm4250", name))
+		name = "sm6115";
+
 	for (p = platforms; *p; p++) {
 		if (!strcmp((*p)->name, name))
 			return *p;
