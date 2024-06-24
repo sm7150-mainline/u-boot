@@ -4,3 +4,4 @@ obj-$(CONFIG_TI_SCI_PROTOCOL)	+= ti_sci.o
 obj-$(CONFIG_SANDBOX)		+= firmware-sandbox.o
 obj-$(CONFIG_ZYNQMP_FIRMWARE)	+= firmware-zynqmp.o
 obj-$(CONFIG_SCMI_FIRMWARE)	+= scmi/
+obj-$(CONFIG_QCOM_SCM)		+= qcom/

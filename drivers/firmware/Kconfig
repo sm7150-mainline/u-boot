@@ -47,3 +47,4 @@ config ARM_SMCCC_FEATURES
 
 source "drivers/firmware/arm-ffa/Kconfig"
 source "drivers/firmware/scmi/Kconfig"
+source "drivers/firmware/qcom/Kconfig"

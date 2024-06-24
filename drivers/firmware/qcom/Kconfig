@@ -1,0 +1,8 @@
+
+config QCOM_SCM
+	bool "Qualcomm Secure Channel Manager (SCM) driver"
+	select FIRMWARE
+	help
+	  The Qualcomm Secure Channel Manager (SCM) driver is used to communicate
+	  with the secure firmware running on Qualcomm SoCs to perform various
+	  platform management services.
