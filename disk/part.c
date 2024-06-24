@@ -6,6 +6,7 @@
 
 #include <blk.h>
 #include <command.h>
+#include <dm/device.h>
 #include <env.h>
 #include <errno.h>
 #include <ide.h>
@@ -14,6 +15,7 @@
 #include <part.h>
 #include <ubifs_uboot.h>
 #include <dm/uclass.h>
+#include <linux/err.h>
 
 #undef	PART_DEBUG
 
@@ -817,3 +819,22 @@ int part_get_bootable(struct blk_desc *desc)
 
 	return 0;
 }
+
+#if IS_ENABLED(CONFIG_PARTITION_TYPE_GUID)
+struct udevice *part_get_by_guid(const char *guid, struct disk_partition **info)
+{
+	struct udevice *dev;
+	struct disk_part *plat;
+
+	uclass_foreach_dev_probe(UCLASS_PARTITION, dev) {
+		plat = dev_get_uclass_plat(dev);
+		*info = &plat->gpt_part_info;
+		if (!strncmp(guid, (*info)->type_guid, 36)) {
+			return dev;
+		}
+	}
+
+	*info = NULL;
+	return ERR_PTR(-ENOENT);
+}
+#endif
