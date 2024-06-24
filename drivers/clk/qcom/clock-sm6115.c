@@ -6,6 +6,8 @@
  *
  */
 
+#define LOG_DEBUG
+
 #include <clk-uclass.h>
 #include <dm.h>
 #include <linux/delay.h>
@@ -143,6 +145,13 @@ static int sm6115_enable(struct clk *clk)
 	case GCC_USB30_PRIM_MASTER_CLK:
 		qcom_gate_clk_en(priv, GCC_USB3_PRIM_PHY_COM_AUX_CLK);
 		qcom_gate_clk_en(priv, GCC_USB3_PRIM_CLKREF_CLK);
+		break;
+	case GCC_SDCC1_AHB_CLK:
+		printf("Resetting SDCC1\n");
+		writel(0x1, priv->base + 0x38000); // GCC_SDCC1_BCR
+		udelay(200);
+		writel(0x0, priv->base + 0x38000); // GCC_SDCC1_BCR
+		udelay(200);
 		break;
 	}
 
