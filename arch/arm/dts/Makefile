@@ -613,6 +613,7 @@ dtb-$(CONFIG_ARCH_SNAPDRAGON) += dragonboard410c.dtb \
 	sm7150-xiaomi-davinci.dtb \
 	sm7150-xiaomi-courbet.dtb \
 	sm7150-xiaomi-surya.dtb \
+	sm7150-xiaomi-sweet_k6a.dtb \
 	rb1.dtb \
 	rb2.dtb \
 	rb5.dtb \
