@@ -172,17 +172,17 @@
 		pinctrl-0 = <&panel_avdd_pins>;
 	};
 
-	panel_vout_3p0: regulator-panel-vout {
-		compatible = "regulator-fixed";
-		regulator-name = "panel_vout_3p0";
-		regulator-min-microvolt = <3000000>;
-		regulator-max-microvolt = <3000000>;
-		regulator-enable-ramp-delay = <233>;
-		gpio = <&tlmm 24 GPIO_ACTIVE_HIGH>;
-		regulator-boot-on;
-		pinctrl-names = "default";
-		pinctrl-0 = <&panel_vout_pins>;
-	};
+	// panel_vout_3p0: regulator-panel-vout {
+	// 	compatible = "regulator-fixed";
+	// 	regulator-name = "panel_vout_3p0";
+	// 	regulator-min-microvolt = <3000000>;
+	// 	regulator-max-microvolt = <3000000>;
+	// 	regulator-enable-ramp-delay = <233>;
+	// 	gpio = <&tlmm 24 GPIO_ACTIVE_HIGH>;
+	// 	regulator-boot-on;
+	// 	pinctrl-names = "default";
+	// 	pinctrl-0 = <&panel_vout_pins>;
+	// };
 
 	vph_pwr: regulator-vph-pwr {
 		compatible = "regulator-fixed";
@@ -604,7 +604,7 @@
 		vddio-supply = <&vreg_l14a_1p8>;
 		vdd-supply = <&vreg_l11c_3p3>;
 		avdd-supply = <&panel_avdd_5p5>;
-		vout-supply = <&panel_vout_3p0>;
+		//vout-supply = <&panel_vout_3p0>;
 		/*
 		 * FIXME: There is a bug somewhere in the display stack and it isn't
 		 * possible to get the panel to a working state after toggling reset.
@@ -616,7 +616,7 @@
 		clocks = <&rpmhcc RPMH_LN_BB_CLK2>;
 		clock-names = "refclk";
 
-		pinctrl-0 = <&panel_reset_pins &panel_vsync_pins>;
+		pinctrl-0 = <&panel_reset_pins &panel_vsync_pins &panel_vout_pins>;
 		pinctrl-names = "default";
 
 		status = "disabled";
