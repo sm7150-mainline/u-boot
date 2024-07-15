@@ -6,6 +6,7 @@
  *
  */
 
+#include <asm/io.h>
 #include <dm.h>
 
 #include "pinctrl-qcom.h"
@@ -121,6 +122,19 @@ static struct msm_pinctrl_data sm8250_data = {
 	.get_pin_name = sm8250_get_pin_name,
 };
 
+static int sm8250_pinctrl_probe(struct udevice *dev)
+{
+	phys_addr_t north = dev_read_addr_name(dev, "north");
+
+	if (north == FDT_ADDR_T_NONE)
+		return -EINVAL;
+
+	/* Configure SDC2 pins default value to enable sdcard */
+	writel(0x1FE4, north + 0xb7000);
+
+	return 0;
+}
+
 static const struct udevice_id msm_pinctrl_ids[] = {
 	{
 		.compatible = "qcom,sm8250-pinctrl",
@@ -134,4 +148,5 @@ U_BOOT_DRIVER(pinctrl_sm8250) = {
 	.of_match = msm_pinctrl_ids,
 	.ops = &msm_pinctrl_ops,
 	.bind = msm_pinctrl_bind,
+	.probe = sm8250_pinctrl_probe,
 };
