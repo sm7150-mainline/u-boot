@@ -2273,6 +2273,9 @@ static int usb_eth_start(struct udevice *udev)
 	packet_received = 0;
 	packet_sent = 0;
 
+	if (usb_gadget_register_driver(&priv->eth_driver) < 0)
+		goto fail;
+
 	gadget = dev->gadget;
 	usb_gadget_connect(gadget);
 
@@ -2394,6 +2397,8 @@ static void usb_eth_stop(struct udevice *udev)
 		dm_usb_gadget_handle_interrupts(udev->parent);
 		dev->network_started = 0;
 	}
+
+	usb_gadget_unregister_driver(&priv->eth_driver);
 }
 
 static int usb_eth_recv(struct udevice *dev, int flags, uchar **packetp)
@@ -2499,15 +2504,6 @@ static int usb_eth_probe(struct udevice *dev)
 	priv->eth_driver.disconnect	= eth_disconnect;
 	priv->eth_driver.suspend	= eth_suspend;
 	priv->eth_driver.resume		= eth_resume;
-	return usb_gadget_register_driver(&priv->eth_driver);
-}
-
-static int usb_eth_remove(struct udevice *dev)
-{
-	struct ether_priv *priv = dev_get_priv(dev);
-
-	usb_gadget_unregister_driver(&priv->eth_driver);
-
 	return 0;
 }
 
@@ -2522,7 +2518,6 @@ U_BOOT_DRIVER(eth_usb) = {
 	.name	= "usb_ether",
 	.id	= UCLASS_ETH,
 	.probe	= usb_eth_probe,
-	.remove	= usb_eth_remove,
 	.unbind	= usb_eth_unbind,
 	.ops	= &usb_eth_ops,
 	.priv_auto	= sizeof(struct ether_priv),
