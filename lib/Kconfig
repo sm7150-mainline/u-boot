@@ -1083,6 +1083,14 @@ config VPL_OF_LIBFDT_ASSUME_MASK
 	  0xff means all assumptions are made and any invalid data may cause
 	  unsafe execution. See FDT_ASSUME_PERFECT, etc. in libfdt_internal.h
 
+config SYMBOL_LOOKUP
+	bool "Enable symbol lookup"
+	depends on ARM64
+	help
+	  This enables support for looking up symbol names from addresses. When
+	  enabled U-Boot will print stack traces with function names when an
+	  exception occurs.
+
 menu "System tables"
 	depends on (!EFI && !SYS_COREBOOT) || (ARM && EFI_LOADER)
 
