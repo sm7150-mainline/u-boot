@@ -23,6 +23,8 @@
 #ifdef __KERNEL__
 extern void show_regs(struct pt_regs *);
 
+void unwind_stack(void);
+
 #define predicate(x)	(x & 0xf0000000)
 #define PREDICATE_ALWAYS	0xe0000000
 
