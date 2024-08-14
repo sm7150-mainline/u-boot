@@ -1111,7 +1111,6 @@ config ARCH_SNAPDRAGON
 	select MSM_SMEM
 	select OF_CONTROL
 	select OF_SEPARATE
-	select SMEM
 	select SPMI
 	select BOARD_LATE_INIT
 	select OF_BOARD
