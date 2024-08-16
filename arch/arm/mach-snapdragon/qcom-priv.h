@@ -25,4 +25,6 @@ static inline void qcom_of_fixup_nodes(void)
 
 void gunyah_init(void);
 
+void qcom_parse_memory(const void *fdt);
+
 #endif /* __QCOM_PRIV_H__ */
