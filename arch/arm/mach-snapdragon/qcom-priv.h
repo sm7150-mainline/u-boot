@@ -3,6 +3,8 @@
 #ifndef __QCOM_PRIV_H__
 #define __QCOM_PRIV_H__
 
+#include <stdbool.h>
+
 #if IS_ENABLED(CONFIG_EFI_HAVE_CAPSULE_SUPPORT)
 void qcom_configure_capsule_updates(void);
 #else
@@ -25,6 +27,6 @@ static inline void qcom_of_fixup_nodes(void)
 
 void gunyah_init(void);
 
-void qcom_parse_memory(const void *fdt);
+void qcom_parse_memory(const void *fdt, bool fdt_is_internal);
 
 #endif /* __QCOM_PRIV_H__ */
