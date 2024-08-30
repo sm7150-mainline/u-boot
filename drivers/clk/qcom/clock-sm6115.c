@@ -21,6 +21,9 @@
 #define QUPV3_WRAP0_S4_CMD_RCGR 0x1f608
 #define SDCC1_APPS_CLK_CMD_RCGR 0x38028
 #define SDCC2_APPS_CLK_CMD_RCGR 0x1e00c
+#define USB30_PRIM_MOCK_UTMI_CMD_RCGR 0x1a034
+#define USB3_PRIM_PHY_AUX_CMD_RCGR 0x1a060
+#define USB30_PRIM_MASTER_CMD_RCGR 0x1a01c
 
 static const struct freq_tbl ftbl_gcc_qupv3_wrap0_s0_clk_src[] = {
 	F(7372800, CFG_CLK_SRC_GPLL0_AUX2, 1, 384, 15625),
@@ -143,8 +146,13 @@ static int sm6115_enable(struct clk *clk)
 
 	switch (clk->id) {
 	case GCC_USB30_PRIM_MASTER_CLK:
+		clk_rcg_set_rate_mnd(priv->base, USB30_PRIM_MASTER_CMD_RCGR,
+				     (4.5 * 2) - 1, 0, 0, CFG_CLK_SRC_GPLL0_AUX2, 8);
+		clk_rcg_set_rate_mnd(priv->base, USB30_PRIM_MOCK_UTMI_CMD_RCGR, 0, 0, 0, 0, 8);
+		clk_rcg_set_rate_mnd(priv->base, USB3_PRIM_PHY_AUX_CMD_RCGR, 0, 0, 0, 0, 8);
 		qcom_gate_clk_en(priv, GCC_USB3_PRIM_PHY_COM_AUX_CLK);
 		qcom_gate_clk_en(priv, GCC_USB3_PRIM_CLKREF_CLK);
+		qcom_gate_clk_en(priv, GCC_USB3_PRIM_PHY_PIPE_CLK);
 		break;
 	case GCC_SDCC1_AHB_CLK:
 		printf("Resetting SDCC1\n");
