@@ -300,6 +300,10 @@ static void configure_env(void)
 	strlcpy(buf, first_compat, sizeof(buf) - 1);
 	tmp = buf;
 
+	if (!strcmp(tmp, "qcom,qcs6490-rb3gen2")) {
+		env_set("soc", "qcs6490");
+	}
+
 	/* The Qualcomm reference boards (RBx, HDK, etc)  */
 	if (!strncmp("qcom", buf, strlen("qcom"))) {
 		/*
