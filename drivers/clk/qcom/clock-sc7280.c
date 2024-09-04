@@ -18,12 +18,20 @@
 
 #define USB30_PRIM_MASTER_CLK_CMD_RCGR 0xf020
 #define USB30_PRIM_MOCK_UTMI_CLK_CMD_RCGR 0xf038
+#define USB30_SEC_MASTER_CLK_CMD_RCGR 0x9e020
+#define USB30_SEC_MOCK_UTMI_CLK_CMD_RCGR 0x9e038
 
 static const struct freq_tbl ftbl_gcc_usb30_prim_master_clk_src[] = {
 	F(66666667, CFG_CLK_SRC_GPLL0_EVEN, 4.5, 0, 0),
 	F(133333333, CFG_CLK_SRC_GPLL0, 4.5, 0, 0),
 	F(200000000, CFG_CLK_SRC_GPLL0_ODD, 1, 0, 0),
 	F(240000000, CFG_CLK_SRC_GPLL0, 2.5, 0, 0),
+	{ }
+};
+
+static const struct freq_tbl ftbl_gcc_usb30_sec_master_clk_src[] = {
+	F(60000000, CFG_CLK_SRC_GPLL0_EVEN, 5, 0, 0),
+	F(120000000, CFG_CLK_SRC_GPLL0_EVEN, 2.5, 0, 0),
 	{ }
 };
 
@@ -47,6 +55,17 @@ static ulong sc7280_set_rate(struct clk *clk, ulong rate)
 	case GCC_USB3_PRIM_PHY_AUX_CLK_SRC:
 		clk_rcg_set_rate(priv->base, USB30_PRIM_MOCK_UTMI_CLK_CMD_RCGR, 1, 0);
 		return 19200000;
+	case GCC_USB30_SEC_MASTER_CLK:
+		freq = qcom_find_freq(ftbl_gcc_usb30_sec_master_clk_src, rate);
+		clk_rcg_set_rate_mnd(priv->base, USB30_SEC_MASTER_CLK_CMD_RCGR,
+				     freq->pre_div, freq->m, freq->n, freq->src, 8);
+		return freq->freq;
+	case GCC_USB30_SEC_MOCK_UTMI_CLK:
+		clk_rcg_set_rate(priv->base, USB30_SEC_MOCK_UTMI_CLK_CMD_RCGR, 1, 0);
+		return 19200000;
+	case GCC_USB3_SEC_PHY_AUX_CLK_SRC:
+		clk_rcg_set_rate(priv->base, USB30_PRIM_MOCK_UTMI_CLK_CMD_RCGR, 1, 0);
+		return 19200000;
 	default:
 		return 0;
 	}
@@ -60,6 +79,11 @@ static const struct gate_clk sc7280_clks[] = {
 	GATE_CLK(GCC_USB30_PRIM_MOCK_UTMI_CLK, 0xf01c, 1),
 	GATE_CLK(GCC_USB3_PRIM_PHY_AUX_CLK, 0xf054, 1),
 	GATE_CLK(GCC_USB3_PRIM_PHY_COM_AUX_CLK, 0xf058, 1),
+	GATE_CLK(GCC_CFG_NOC_USB3_SEC_AXI_CLK, 0x9e07c , 1),
+	GATE_CLK(GCC_USB30_SEC_MASTER_CLK, 0x9e010, 1),
+	GATE_CLK(GCC_AGGRE_USB3_SEC_AXI_CLK, 0x9e080, 1),
+	GATE_CLK(GCC_USB30_SEC_SLEEP_CLK, 0x9e018, 1),
+	GATE_CLK(GCC_USB30_SEC_MOCK_UTMI_CLK, 0x9e01c, 1),
 };
 
 static int sc7280_enable(struct clk *clk)
@@ -80,6 +104,13 @@ static int sc7280_enable(struct clk *clk)
 	case GCC_USB30_PRIM_MASTER_CLK:
 		qcom_gate_clk_en(priv, GCC_USB3_PRIM_PHY_AUX_CLK);
 		qcom_gate_clk_en(priv, GCC_USB3_PRIM_PHY_COM_AUX_CLK);
+		break;
+	case GCC_AGGRE_USB3_SEC_AXI_CLK:
+		qcom_gate_clk_en(priv, GCC_USB30_SEC_MASTER_CLK);
+		fallthrough;
+	case GCC_USB30_SEC_MASTER_CLK:
+		qcom_gate_clk_en(priv, GCC_USB3_SEC_PHY_AUX_CLK);
+		qcom_gate_clk_en(priv, GCC_USB3_SEC_PHY_COM_AUX_CLK);
 		break;
 	}
 
@@ -110,6 +141,7 @@ static const struct qcom_reset_map sc7280_gcc_resets[] = {
 static const struct qcom_power_map sc7280_gdscs[] = {
 	[GCC_UFS_PHY_GDSC] = { 0x77004 },
 	[GCC_USB30_PRIM_GDSC] = { 0xf004 },
+	[GCC_USB30_SEC_GDSC] = { 0x9e004 },
 };
 
 static const phys_addr_t sc7280_rcg_addrs[] = {
