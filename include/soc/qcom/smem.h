@@ -9,6 +9,7 @@
 
 #if defined(CONFIG_QCOM_SMEM)
 int qcom_smem_init(void);
+int qcom_socinfo_init(void);
 
 bool qcom_smem_is_available(void);
 int qcom_smem_alloc(unsigned host, unsigned item, size_t size);
