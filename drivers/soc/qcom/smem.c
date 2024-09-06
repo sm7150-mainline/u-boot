@@ -16,6 +16,7 @@
 #include <soc/qcom/smem.h>
 #include <soc/qcom/socinfo.h>
 #include <env.h>
+#include <asm/system.h>
 
 /*
  * The Qualcomm shared memory system is a allocate only heap structure that
@@ -1051,6 +1052,8 @@ int qcom_smem_init(void)
 		return -EINVAL;
 	}
 	smem->regions[0].size = reg_size;
+
+	mmu_map_region((phys_addr_t)smem->regions[0].aux_base, (phys_size_t)reg_size, false);
 
 	ret = qcom_smem_map_toc(smem, &smem->regions[0]);
 	if (ret) {
