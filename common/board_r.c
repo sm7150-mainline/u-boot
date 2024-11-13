@@ -391,6 +391,7 @@ static int initr_onenand(void)
 #ifdef CONFIG_MMC
 static int initr_mmc(void)
 {
+	puts("MMC:   ");
 	mmc_initialize(gd->bd);
 	return 0;
 }
