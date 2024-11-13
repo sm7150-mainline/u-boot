@@ -153,7 +153,7 @@ void *ofnode_lookup_fdt(ofnode node)
 
 		if (i >= oftree_count) {
 			log_debug("Invalid tree ID %x\n", i);
-			return NULL;
+			return (void *)gd->fdt_blob;
 		}
 
 		return oftree_list[i];
