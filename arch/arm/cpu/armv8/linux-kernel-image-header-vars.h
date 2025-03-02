@@ -79,7 +79,7 @@
  */
 #define HEAD_SYMBOLS						\
 	DEFINE_IMAGE_LE64(_kernel_size_le, __MEM_USAGE);	\
-	DEFINE_IMAGE_LE64(_kernel_offset_le, TEXT_OFFSET);	\
+	DEFINE_IMAGE_LE64(_kernel_offset_le, 0x00080000);	\
 	DEFINE_IMAGE_LE64(_kernel_flags_le, __HEAD_FLAGS);
 
 	HEAD_SYMBOLS
