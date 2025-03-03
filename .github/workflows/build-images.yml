@@ -1,0 +1,57 @@
+name: Build images
+
+on: [push]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [sm7150-google-sunfish, sm7150-xiaomi-davinci, sm7150-xiaomi-surya-huaxing, sm7150-xiaomi-surya-tianma, sm7150-xiaomi-sweet, sm7150-xiaomi-toco, sm7150-xiaomi-tucana]
+        usb_mode: [host, peripheral]
+
+    name: Build ${{ matrix.device }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends gcc-aarch64-linux-gnu libgnutls28-dev
+
+      # mkbootimg in Ubuntu repos is broken, so use the forked C variant
+      - name: Build mkbootimg
+        run: |
+          git clone https://github.com/osm0sis/mkbootimg
+          cd mkbootimg
+          CFLAGS=-Wstringop-overflow=0 make mkbootimg
+          cd ..
+
+      - name: Configure USB as host mode
+        if: ${{ matrix.usb_mode == 'host' }}
+        run: |
+          sed -i 's/dr_mode = "otg"/dr_mode = "host"/g' dts/upstream/src/arm64/qcom/sm7150-xiaomi-common.dtsi
+          sed -i 's/dr_mode = "otg"/dr_mode = "host"/g' dts/upstream/src/arm64/qcom/sm7150-google-sunfish.dts
+
+      - name: Configure U-Boot
+        run: |
+          make CROSS_COMPILE=aarch64-linux-gnu- O=.output qcom_defconfig qcom-phone.config
+
+      - name: Build U-Boot
+        run: |
+          make CROSS_COMPILE=aarch64-linux-gnu- O=.output -j$(nproc) CONFIG_DEFAULT_DEVICE_TREE=qcom/${{ matrix.device }}
+
+      - name: Assemble Android boot.img
+        run: |
+          gzip .output/u-boot-nodtb.bin -c > .output/u-boot-nodtb.bin.gz
+          cat .output/u-boot-nodtb.bin.gz .output/dts/upstream/src/arm64/qcom/${{ matrix.device }}.dtb > .output/uboot-dtb
+          ./mkbootimg/mkbootimg --base '0x0' --kernel_offset '0x00008000' --pagesize '4096' --kernel .output/uboot-dtb -o .output/u-boot.img
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: u-boot-${{ matrix.device }}-usb-${{ matrix.usb_mode }}.img
+          path: .output/u-boot.img
