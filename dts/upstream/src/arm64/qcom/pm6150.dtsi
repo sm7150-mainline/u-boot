@@ -130,6 +130,14 @@
 				reg = <ADC5_DIE_TEMP>;
 				label = "die_temp";
 			};
+
+			bat_therm@4a {
+				reg = <ADC5_BAT_THERM_100K_PU>;
+				label = "bat_therm";
+				qcom,ratiometric;
+				qcom,hw-settle-time = <200>;
+				qcom,pre-scaling = <1 1>;
+			};
 		};
 
 		pm6150_adc_tm: adc-tm@3500 {
@@ -142,12 +150,32 @@
 			status = "disabled";
 		};
 
+		pm6150_qgauge: qgauge@4800 {
+			compatible = "qcom,pm6150-qg";
+			reg = <0x4800>;
+
+			io-channels = <&pm6150_adc ADC5_BAT_THERM_100K_PU>;
+			io-channel-names = "batt-therm";
+
+			nvmem = <&pm6150_qg_sdam>;
+
+			status = "disabled";
+		};
+
 		pm6150_rtc: rtc@6000 {
 			compatible = "qcom,pm8941-rtc";
 			reg = <0x6000>, <0x6100>;
 			reg-names = "rtc", "alarm";
 			interrupts = <0x0 0x61 0x1 IRQ_TYPE_EDGE_RISING>;
 			status = "disabled";
+		};
+
+		pm6150_qg_sdam: nvram@b600 {
+			compatible = "qcom,spmi-sdam";
+			reg = <0xb600>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges = <0 0xb600 0x100>;
 		};
 
 		pm6150_gpios: gpio@c000 {
