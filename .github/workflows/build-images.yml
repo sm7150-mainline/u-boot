@@ -1,0 +1,54 @@
+name: Build images
+
+on: [push]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - device: sm7150-google-sunfish
+          - device: sm7150-xiaomi-davinci
+          - device: sm7150-xiaomi-surya-huaxing
+          - device: sm7150-xiaomi-surya-tianma
+
+    name: Build ${{ matrix.device }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends gcc-aarch64-linux-gnu libgnutls28-dev
+
+      # mkbootimg in Ubuntu repos is broken, so use the forked C variant
+      - name: Build mkbootimg
+        run: |
+          git clone https://github.com/osm0sis/mkbootimg
+          cd mkbootimg
+          CFLAGS=-Wstringop-overflow=0 make mkbootimg
+          cd ..
+
+      - name: Configure U-Boot
+        run: |
+          make CROSS_COMPILE=aarch64-linux-gnu- O=.output qcom_defconfig phone.config
+
+      - name: Build U-Boot
+        run: |
+          make CROSS_COMPILE=aarch64-linux-gnu- O=.output -j$(nproc) DEVICE_TREE=qcom/${{ matrix.device }}
+
+      - name: Assemble Android boot.img
+        run: |
+          gzip .output/u-boot-nodtb.bin -c > .output/u-boot-nodtb.bin.gz
+          cat .output/u-boot-nodtb.bin.gz .output/dts/upstream/src/arm64/qcom/${{ matrix.device }}.dtb > .output/uboot-dtb
+          ./mkbootimg/mkbootimg --base '0x0' --kernel_offset '0x00008000' --pagesize '4096' --kernel .output/uboot-dtb -o .output/u-boot.img
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: u-boot-${{ matrix.device }}.img
+          path: .output/u-boot.img
