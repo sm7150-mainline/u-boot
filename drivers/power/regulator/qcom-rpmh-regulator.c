@@ -493,6 +493,12 @@ static const struct rpmh_vreg_hw_data pmic5_pldo515_mv = {
 	.supply_name	= _supply_name, \
 }
 
+static const struct rpmh_vreg_init_data pm6150l_vreg_data[] = {
+	RPMH_VREG("ldo6",   "ldo%s6",  &pmic5_pldo,    "vdd-l4-l5-l6"),
+	RPMH_VREG("ldo9",   "ldo%s9",  &pmic5_pldo,    "vdd-l9-l10"),
+	{}
+};
+
 static const struct rpmh_vreg_init_data pm8150_vreg_data[] = {
 	RPMH_VREG("ldo13",  "ldo%s13", &pmic5_pldo,      "vdd-l13-l16-l17"),
 	{}
@@ -705,6 +711,10 @@ static int rpmh_regulators_bind(struct udevice *dev)
 }
 
 static const struct udevice_id rpmh_regulator_ids[] = {
+	{
+		.compatible = "qcom,pm6150l-rpmh-regulators",
+		.data = (ulong)pm6150l_vreg_data,
+	},
 	{
 		.compatible = "qcom,pm8150-rpmh-regulators",
 		.data = (ulong)pm8150_vreg_data,
