@@ -260,6 +260,7 @@
 			regulator-allow-set-load;
 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
 						   RPMH_REGULATOR_MODE_HPM>;
+			regulator-always-on;
 		};
 
 		vreg_l5a_2p7: ldo5 {
@@ -302,6 +303,7 @@
 			regulator-min-microvolt = <1696000>;
 			regulator-max-microvolt = <1984000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-always-on;
 		};
 
 		vreg_l12a_1p8: ldo12 {
@@ -348,6 +350,7 @@
 			regulator-min-microvolt = <3000000>;
 			regulator-max-microvolt = <3232000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-always-on;
 		};
 
 		vreg_l19a_2p85: ldo19 {
@@ -874,6 +877,7 @@
 	dr_mode = "otg";
 	usb-role-switch;
 	maximum-speed = "high-speed";
+	vbus-supply = <&pm6150_vbus>;
 };
 
 &usb_1_dwc3_hs {
