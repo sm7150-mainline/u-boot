@@ -878,6 +878,7 @@
 	usb-role-switch;
 	/* SM7150 doesn't support USB3 yet */
 	maximum-speed = "high-speed";
+	vbus-supply = <&pm6150_vbus>;
 };
 
 &usb_1_dwc3_hs {
