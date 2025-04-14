@@ -456,6 +456,16 @@ static const struct rpmh_vreg_hw_data pmic5_pldo_lv = {
 	.n_modes = ARRAY_SIZE(pmic_mode_map_pmic5_ldo),
 };
 
+static const struct rpmh_vreg_hw_data pmic5_nldo = {
+	.regulator_type = VRM,
+	.ops = &rpmh_regulator_vrm_drms_ops,
+	.voltage_range = REGULATOR_LINEAR_RANGE(320000, 0, 123, 8000),
+	.n_voltages = 124,
+	.hpm_min_load_uA = 30000,
+	.pmic_mode_map = pmic_mode_map_pmic5_ldo,
+	.n_modes = ARRAY_SIZE(pmic_mode_map_pmic5_ldo),
+};
+
 static const struct rpmh_vreg_hw_data pmic5_nldo515 = {
 	.regulator_type = VRM,
 	.ops = &rpmh_regulator_vrm_drms_ops,
@@ -492,6 +502,13 @@ static const struct rpmh_vreg_hw_data pmic5_pldo515_mv = {
 	.hw_data	= _hw_data, \
 	.supply_name	= _supply_name, \
 }
+
+static const struct rpmh_vreg_init_data pm6150_vreg_data[] = {
+	RPMH_VREG("ldo4",   "ldo%s4",  &pmic5_nldo,    "vdd-l4-l7-l8"),
+	RPMH_VREG("ldo11",  "ldo%s11", &pmic5_pldo_lv, "vdd-l11-l12-l13"),
+	RPMH_VREG("ldo17",  "ldo%s17", &pmic5_pldo,    "vdd-l5-l16-l17-l18-l19"),
+	{}
+};
 
 static const struct rpmh_vreg_init_data pm6150l_vreg_data[] = {
 	RPMH_VREG("ldo6",   "ldo%s6",  &pmic5_pldo,    "vdd-l4-l5-l6"),
@@ -711,6 +728,10 @@ static int rpmh_regulators_bind(struct udevice *dev)
 }
 
 static const struct udevice_id rpmh_regulator_ids[] = {
+	{
+		.compatible = "qcom,pm6150-rpmh-regulators",
+		.data = (ulong)pm6150_vreg_data,
+	},
 	{
 		.compatible = "qcom,pm6150l-rpmh-regulators",
 		.data = (ulong)pm6150l_vreg_data,
