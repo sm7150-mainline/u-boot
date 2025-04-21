@@ -67,9 +67,9 @@
 			no-map;
 		};
 
-		rmtfs_mem: rmtfs@fde01000 {
+		rmtfs_mem: rmtfs@f5e01000 {
 			compatible = "qcom,rmtfs-mem";
-			reg = <0 0xfde01000 0 0x200000>;
+			reg = <0 0xf5e01000 0 0x200000>;
 			no-map;
 
 			qcom,client-id = <1>;
@@ -239,6 +239,30 @@
 	vsp-supply = <&vreg_lab>;
 };
 
+&pm6150l_flash {
+	status = "okay";
+
+	led-0 {
+		function = LED_FUNCTION_FLASH;
+		function-enumerator = <0>;
+		color = <LED_COLOR_ID_WHITE>;
+		led-sources = <1>;
+		led-max-microamp = <150000>;
+		flash-max-microamp = <1000000>;
+		flash-max-timeout-us = <1280000>;
+	};
+
+	led-1 {
+		function = LED_FUNCTION_FLASH;
+		function-enumerator = <1>;
+		color = <LED_COLOR_ID_WHITE>;
+		led-sources = <2>;
+		led-max-microamp = <150000>;
+		flash-max-microamp = <1000000>;
+		flash-max-timeout-us = <1280000>;
+	};
+};
+
 &q6afedai {
 	dai@16 {
 		reg = <PRIMARY_MI2S_RX>;
@@ -249,6 +273,29 @@
 &q6asmdai {
 	dai@0 {
 		reg = <0>;
+	};
+};
+
+&remoteproc_adsp {
+	firmware-name = "qcom/sm7150/toco/adsp.mbn";
+};
+
+&remoteproc_cdsp {
+	firmware-name = "qcom/sm7150/toco/cdsp.mbn";
+};
+
+&remoteproc_mpss {
+	firmware-name = "qcom/sm7150/toco/modem.mbn";
+};
+
+&spi8 {
+	status = "okay";
+
+	irled@0 {
+		compatible = "ir-spi-led";
+		reg = <0x0>;
+
+		spi-max-frequency = <19200000>;
 	};
 };
 
@@ -273,18 +320,6 @@
 
 &uart8 {
 	status = "disabled";
-};
-
-&remoteproc_adsp {
-	firmware-name = "qcom/sm7150/toco/adsp.mbn";
-};
-
-&remoteproc_cdsp {
-	firmware-name = "qcom/sm7150/toco/cdsp.mbn";
-};
-
-&remoteproc_mpss {
-	firmware-name = "qcom/sm7150/toco/modem.mbn";
 };
 
 &venus {
