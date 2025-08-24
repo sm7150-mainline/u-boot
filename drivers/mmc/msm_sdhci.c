@@ -196,6 +196,8 @@ static int msm_sdc_probe(struct udevice *dev)
 		}
 	}
 
+	gpio_request_by_name(dev, "cd-gpios", 0, &host->cd_gpio, GPIOD_IS_IN);
+
 	var_info = (void *)dev_get_driver_data(dev);
 	if (!var_info->mci_removed) {
 		ret = msm_sdc_mci_init(prv);
