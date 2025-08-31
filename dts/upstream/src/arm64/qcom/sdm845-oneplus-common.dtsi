@@ -27,7 +27,20 @@
 	};
 
 	chosen {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
 		stdout-path = "serial0:115200n8";
+
+		/* Use framebuffer setup by the bootloader. */
+		framebuffer: framebuffer@9d400000 {
+			compatible = "simple-framebuffer";
+			reg = <0x0 0x9d400000 0x0 0x2400000>;
+			width = <1080>;
+			stride = <(1080 * 4)>;
+			format = "a8r8g8b8";
+		};
 	};
 
 	gpio-hall-sensor {
@@ -105,6 +118,11 @@
 		removed_region: removed-region@88f00000 {
 			no-map;
 			reg = <0 0x88f00000 0 0x1c00000>;
+		};
+
+		framebuffer@9d400000 {
+			reg = <0x0 0x9d400000 0x0 0x2400000>;
+			no-map;
 		};
 
 		ramoops: ramoops@ac300000 {

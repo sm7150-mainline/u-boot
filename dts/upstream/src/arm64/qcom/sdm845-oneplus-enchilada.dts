@@ -33,6 +33,10 @@
 	monitored-battery = <&battery>;
 };
 
+&framebuffer {
+	height = <2280>;
+};
+
 &i2c4 {
 	status = "okay";
 
