@@ -375,7 +375,7 @@ static int smbios_write_type0(ulong *current, int handle,
 	fill_smbios_header(t, SMBIOS_BIOS_INFORMATION, len, handle);
 	smbios_set_eos(ctx, t->eos);
 	t->vendor = smbios_add_prop_si(ctx, NULL, SYSID_SM_BIOS_VENDOR,
-				       "U-Boot");
+				       "U-Boot Tauchgang");
 
 	t->bios_ver = smbios_add_prop_si(ctx, "version", SYSID_SM_BIOS_VER,
 					 PLAIN_VERSION);
