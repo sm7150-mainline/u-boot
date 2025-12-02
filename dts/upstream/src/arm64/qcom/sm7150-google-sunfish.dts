@@ -1,29 +1,36 @@
 // SPDX-License-Identifier: BSD-3-Clause
 /*
- * Copyright (c) 2024, Danila Tikhonov <danila@jiaxyga.com>
- * Copyright (c) 2024, David Wronek <davidwronek@gmail.com>
- * Copyright (c) 2024, Jens Reidel <adrian@travitia.xyz>
+ * Copyright (c) 2023-2024, Connor Mitchell <c.dog29@hotmail.com>
+ * Copyright (c) 2025, Danila Tikhonov <danila@jiaxyga.com>
  */
 
 /dts-v1/;
 
-#include <dt-bindings/arm/qcom,ids.h>
 #include <dt-bindings/firmware/qcom,scm.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/leds/common.h>
 #include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
 #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
-#include <dt-bindings/sound/qcom,q6asm.h>
 #include <dt-bindings/usb/pd.h>
 
 #include "sm7150.dtsi"
 #include "pm6150.dtsi"
 #include "pm6150l.dtsi"
 
-/ {
-	chassis-type = "handset";
+/delete-node/ &mpss_mem;
+/delete-node/ &venus_mem;
+/delete-node/ &cdsp_mem;
+/delete-node/ &adsp_mem;
+/delete-node/ &wlan_msa_mem;
+/delete-node/ &npu_mem;
+/delete-node/ &ipa_fw_mem;
+/delete-node/ &ipa_gsi_mem;
+/delete-node/ &gpu_mem;
 
-	qcom,msm-id = <QCOM_ID_SM7150 0>;
+/ {
+	model = "Google Pixel 4a";
+	compatible = "google,sunfish", "qcom,sm7150";
+	chassis-type = "handset";
 
 	aliases {
 		bluetooth0 = &bluetooth;
@@ -32,30 +39,20 @@
 		wifi0 = &wifi;
 	};
 
-	battery: battery {
-		compatible = "simple-battery";
-
-		voltage-min-design-microvolt = <3400000>;
-		voltage-max-design-microvolt = <4400000>;
-	};
-
 	chosen {
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
 
 		stdout-path = "serial0:115200n8";
-		bootargs = "earlycon console=ttyMSM0,115200";
 
-		framebuffer: framebuffer@9c000000 {
+		framebuffer@9c000000 {
 			compatible = "simple-framebuffer";
-			reg = <0x0 0x9c000000 0x0 (1080 * 2400 * 4)>;
+			reg = <0x0 0x9c000000 0x0 (1080 * 2340 * 4)>;
 			width = <1080>;
-			height = <2400>;
+			height = <2340>;
 			stride = <(1080 * 4)>;
 			format = "a8r8g8b8";
-
-			display = <&panel>;
 
 			clocks = <&gcc GCC_DISP_HF_AXI_CLK>;
 		};
@@ -63,52 +60,125 @@
 
 	gpio_keys: gpio-keys {
 		compatible = "gpio-keys";
-		pinctrl-names = "default";
+
 		pinctrl-0 = <&vol_up_n>;
+		pinctrl-names = "default";
 
 		key-volume-up {
 			label = "Volume Up";
-			linux,code = <KEY_VOLUMEUP>;
 			gpios = <&pm6150l_gpios 2 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_VOLUMEUP>;
 			debounce-interval = <15>;
+			linux,can-disable;
+			wakeup-source;
 		};
 	};
 
 	reserved-memory {
-		cont_splash_mem: splash_region@9c000000 {
-			reg = <0x0 0x9c000000 0x0 (1080 * 2400 * 4)>;
+		mpss_mem: memory@8b000000 {
+			reg = <0x0 0x8b000000 0x0 0x9800000>;
 			no-map;
 		};
 
-		ramoops@9d800000 {
-			compatible = "ramoops";
-			reg = <0x0 0x9d800000 0x0 0x400000>;
+		venus_mem: memory@94800000 {
+			reg = <0x0 0x94800000 0x0 0x500000>;
+			no-map;
+		};
 
-			record-size = <0x80000>;
+		cdsp_mem: memory@94d00000 {
+			reg = <0x0 0x94d00000 0x0 0x1e00000>;
+			no-map;
+		};
+
+		adsp_mem: memory@96b00000 {
+			reg = <0x00 0x96b00000 0x00 0x2200000>;
+			no-map;
+		};
+
+		wlan_msa_mem: memory@98d00000 {
+			reg = <0x0 0x98d00000 0x0 0x200000>;
+			no-map;
+		};
+
+		npu_mem: memory@98f00000 {
+			reg = <0x0 0x98f00000 0x0 0x80000>;
+			no-map;
+		};
+
+		ipa_fw_mem: memory@98f80000 {
+			reg = <0x0 0x98f80000 0x0 0x10000>;
+			no-map;
+		};
+
+		ipa_gsi_mem: memory@98f90000 {
+			reg = <0x0 0x98f90000 0x0 0x5000>;
+			no-map;
+		};
+
+		gpu_mem: memory@98f95000 {
+			reg = <0x0 0x98f95000 0x0 0x2000>;
+			no-map;
+		};
+
+		cont_splash_mem: cont-splash@9c000000 {
+			reg = <0x0 0x9c000000 0x0 (1080 * 2340 * 4)>;
+			no-map;
+		};
+
+		ramoops_mem: ramoops@a481f000 {
+			compatible = "ramoops";
+			reg = <0x0 0xa481f000 0x0 0x400000>;
+
+			record-size = <0x40000>;
 			pmsg-size = <0x200000>;
 			console-size = <0x100000>;
 		};
 
-		ramdump_fb_mem: ramdump_fb_region@af000000 {
-			reg = <0x0 0xaf000000 0x0 0x1000000>;
+		rmtfs_mem: rmtfs@fde01000 {
+			compatible = "qcom,rmtfs-mem";
+			reg = <0x0 0xfde01000 0x0 0x600000>;
 			no-map;
+
+			qcom,client-id = <1>;
+			qcom,vmid = <QCOM_SCM_VMID_MSS_MSA>;
 		};
 	};
 
-	vph_pwr: vph-pwr-regulator {
+	vph_pwr: regulator-vph-pwr {
 		compatible = "regulator-fixed";
+
 		regulator-name = "vph_pwr";
 		regulator-min-microvolt = <3700000>;
 		regulator-max-microvolt = <3700000>;
+
+		regulator-always-on;
+		regulator-boot-on;
+	};
+
+	vreg_ibb: regulator-ibb {
+		compatible = "regulator-fixed";
+
+		regulator-name = "ibb";
+		regulator-min-microvolt = <6000000>;
+		regulator-max-microvolt = <6000000>;
+	};
+
+	vreg_lab: regulator-lab {
+		compatible = "regulator-fixed";
+
+		regulator-name = "lab";
+		regulator-min-microvolt = <6100000>;
+		regulator-max-microvolt = <6100000>;
 	};
 
 	// S3A is really mx.lvl but it's there for supply map completeness sake.
-	vreg_s3a_0p8: smpa3-regulator {
+	vreg_s3a_0p8: regulator-smpa3 {
 		compatible = "regulator-fixed";
-		regulator-name = "vreg_s3a_0p8";
 
+		regulator-name = "vreg_s3a_0p8";
 		regulator-min-microvolt = <800000>;
 		regulator-max-microvolt = <800000>;
+
 		regulator-always-on;
 		vin-supply = <&vph_pwr>;
 	};
@@ -125,18 +195,18 @@
 		vdd-s4-supply = <&vph_pwr>;
 		vdd-s5-supply = <&vph_pwr>;
 
-		vdd-l1-supply = <&vreg_s8c_1p35>;
+		vdd-l1-supply = <&vreg_s8c_1p2>;
 		vdd-l2-l3-supply = <&vreg_s4a_1p1>;
 		vdd-l4-l7-l8-supply = <&vreg_s4a_1p1>;
 		vdd-l5-l16-l17-l18-l19-supply = <&vreg_bob>;
-		vdd-l6-supply = <&vreg_s8c_1p35>;
+		vdd-l6-supply = <&vreg_s8c_1p2>;
 		vdd-l9-supply = <&vreg_s3a_0p8>;
 		vdd-l10-l14-l15-supply = <&vreg_s5a_2p0>;
 		vdd-l11-l12-l13-supply = <&vreg_s5a_2p0>;
 
 		/*
-		 * S1 are unused.
-		 * S2-S3, L7-L8 are ARCs:
+		 * S1, S4, S5 are unused.
+		 * S2-S3 and L7-L8 are ARCs:
 		 * S2 - gfx.lvl,
 		 * S3 - mx.lvl,
 		 * L7 - lmx.lvl,
@@ -144,22 +214,28 @@
 		 */
 
 		vreg_s4a_1p1: smps4 {
+			regulator-name = "vreg_s4a_1p1";
 			regulator-min-microvolt = <824000>;
 			regulator-max-microvolt = <1120000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_s5a_2p0: smps5 {
+			regulator-name = "vreg_s5a_2p0";
 			regulator-min-microvolt = <1744000>;
 			regulator-max-microvolt = <2040000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_l1a_1p2: ldo1 {
+			regulator-name = "vreg_l1a_1p2";
 			regulator-min-microvolt = <1096000>;
 			regulator-max-microvolt = <1304000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_l2a_1p0: ldo2 {
+			regulator-name = "vreg_l2a_1p0";
 			regulator-min-microvolt = <944000>;
 			regulator-max-microvolt = <1056000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -167,6 +243,7 @@
 
 		vdda_pll_cc_ebi01:
 		vreg_l3a_1p0: ldo3 {
+			regulator-name = "vreg_l3a_1p0";
 			regulator-min-microvolt = <968000>;
 			regulator-max-microvolt = <1064000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -180,11 +257,11 @@
 		vdda_mipi_csi2_0p9:
 		vdda_mipi_csi3_0p9:
 		vdda_mipi_dsi0_pll:
-		vdda_mipi_dsi1_pll:
 		vdda_qrefs_0p9:
 		vdda_ufs_core:
 		vdda_usb_ss_dp_core:
 		vreg_l4a_0p88: ldo4 {
+			regulator-name = "vreg_l4a_0p88";
 			regulator-min-microvolt = <824000>;
 			regulator-max-microvolt = <920000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -194,12 +271,14 @@
 		};
 
 		vreg_l5a_2p7: ldo5 {
+			regulator-name = "vreg_l5a_2p7";
 			regulator-min-microvolt = <2600000>;
 			regulator-max-microvolt = <2800000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_l6a_1p2: ldo6 {
+			regulator-name = "vreg_l6a_1p2";
 			regulator-min-microvolt = <1096000>;
 			regulator-max-microvolt = <1304000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -207,6 +286,7 @@
 
 		vdd_wcss_cx:
 		vreg_l9a_0p8: ldo9 {
+			regulator-name = "vreg_l9a_0p8";
 			regulator-min-microvolt = <624000>;
 			regulator-max-microvolt = <760000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -214,6 +294,7 @@
 
 		vddpx_3:
 		vreg_l10a_1p8: ldo10 {
+			regulator-name = "vreg_l10a_1p8";
 			regulator-min-microvolt = <1720000>;
 			regulator-max-microvolt = <1832000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -225,12 +306,14 @@
 		vdda_usb_hs_1p8:
 		vddpx_11:
 		vreg_l11a_1p8: ldo11 {
+			regulator-name = "vreg_l11a_1p8";
 			regulator-min-microvolt = <1696000>;
 			regulator-max-microvolt = <1984000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_l12a_1p8: ldo12 {
+			regulator-name = "vreg_l12a_1p8";
 			regulator-min-microvolt = <1696000>;
 			regulator-max-microvolt = <1952000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -240,43 +323,43 @@
 		};
 
 		vreg_l13a_1p8: ldo13 {
+			regulator-name = "vreg_l13a_1p8";
 			regulator-min-microvolt = <1696000>;
 			regulator-max-microvolt = <1904000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_l14a_1p8: ldo14 {
+			regulator-name = "vreg_l14a_1p8";
 			regulator-min-microvolt = <1720000>;
 			regulator-max-microvolt = <1856000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_l15a_1p8: ldo15 {
+			regulator-name = "vreg_l15a_1p8";
 			regulator-min-microvolt = <1696000>;
 			regulator-max-microvolt = <1904000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_l16a_2p8: ldo16 {
-			regulator-min-microvolt = <1800000>;
-			regulator-max-microvolt = <1800000>;
+			regulator-name = "vreg_l16a_2p8";
+			regulator-min-microvolt = <2424000>;
+			regulator-max-microvolt = <2976000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vdda_usb_hs_3p1:
 		vreg_l17a_3p1: ldo17 {
+			regulator-name = "vreg_l17a_3p1";
 			regulator-min-microvolt = <3000000>;
 			regulator-max-microvolt = <3232000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
-		vreg_l18a_2p8: ldo18 {
-			regulator-min-microvolt = <3000000>;
-			regulator-max-microvolt = <3000000>;
-			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
-		};
-
 		vreg_l19a_2p85: ldo19 {
+			regulator-name = "vreg_l19a_2p85";
 			regulator-min-microvolt = <2944000>;
 			regulator-max-microvolt = <3304000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -299,12 +382,7 @@
 		vdd-s7-supply = <&vph_pwr>;
 		vdd-s8-supply = <&vph_pwr>;
 
-		/*
-		 * There should be:
-		 * vdd-l1-l8-supply = <&vreg_s5a_2p0>;
-		 * But pm7150l doesn't have access to S5A.
-		 */
-		vdd-l2-l3-supply = <&vreg_s8c_1p35>;
+		vdd-l2-l3-supply = <&vreg_s8c_1p2>;
 		vdd-l4-l5-l6-supply = <&vreg_bob>;
 		vdd-l7-l11-supply = <&vreg_bob>;
 		vdd-l9-l10-supply = <&vreg_bob>;
@@ -321,16 +399,21 @@
 		 */
 
 		vreg_s1c_1p13: smps1 {
+			regulator-name = "vreg_s1c_1p13";
 			regulator-min-microvolt = <1000000>;
 			regulator-max-microvolt = <1200000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
-		vreg_s8c_1p35: smps8 {
-			regulator-min-microvolt = <1120000>;
-			regulator-max-microvolt = <1408000>;
+		vreg_s8c_1p2: smps8 {
+			regulator-name = "vreg_s8c_1p2";
+			regulator-min-microvolt = <1200000>;
+			regulator-max-microvolt = <1730000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_l1c_1p8: ldo1 {
+			regulator-name = "vreg_l1c_1p8";
 			regulator-min-microvolt = <1616000>;
 			regulator-max-microvolt = <1984000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -338,6 +421,7 @@
 
 		vdd_wcss_adc_dac:
 		vreg_l2c_1p3: ldo2 {
+			regulator-name = "vreg_l2c_1p3";
 			regulator-min-microvolt = <1200000>;
 			regulator-max-microvolt = <1352000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -349,11 +433,11 @@
 		vdda_csi3_1p25:
 		vdda_hv_ebi0:
 		vdda_mipi_dsi0_1p2:
-		vdda_mipi_dsi1_1p2:
 		vdda_ufs_1p2:
 		vdda_usb_ss_dp_1p2:
 		vddpx_10:
 		vreg_l3c_1p23: ldo3 {
+			regulator-name = "vreg_l3c_1p23";
 			regulator-min-microvolt = <1144000>;
 			regulator-max-microvolt = <1256000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -364,6 +448,7 @@
 
 		vddpx_5:
 		vreg_l4c_1p8: ldo4 {
+			regulator-name = "vreg_l4c_1p8";
 			regulator-min-microvolt = <1648000>;
 			regulator-max-microvolt = <2950000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -371,73 +456,63 @@
 
 		vddpx_6:
 		vreg_l5c_1p8: ldo5 {
+			regulator-name = "vreg_l5c_1p8";
 			regulator-min-microvolt = <1648000>;
 			regulator-max-microvolt = <2950000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
-		/*
-		 * Downstream specifies a range of 1648-3100mV.
-		 * Tighten the range to 3000-3100mV for reliable touchscreen
-		 * initialization.
-		 */
 		vddpx_2:
 		vreg_l6c_3p0: ldo6 {
-			regulator-min-microvolt = <3000000>;
-			regulator-max-microvolt = <3100000>;
+			regulator-name = "vreg_l6c_3p0";
+			regulator-min-microvolt = <2960000>;
+			regulator-max-microvolt = <3304000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_l7c_3p0: ldo7 {
+			regulator-name = "vreg_l7c_3p0";
 			regulator-min-microvolt = <3000000>;
 			regulator-max-microvolt = <3312000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_l8c_1p8: ldo8 {
+			regulator-name = "vreg_l8c_1p8";
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1900000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
-		/*
-		 * Downstream specifies a range of 2950-3312mV.
-		 * Tighten the range to 2950-3100mV.
-		 */
 		vreg_l9c_3p1: ldo9 {
+			regulator-name = "vreg_l9c_3p1";
 			regulator-min-microvolt = <2950000>;
-			regulator-max-microvolt = <3100000>;
+			regulator-max-microvolt = <3312000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
-			regulator-allow-set-load;
-			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
-						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_l10c_3p3: ldo10 {
+			regulator-name = "vreg_l10c_3p3";
 			regulator-min-microvolt = <3200000>;
 			regulator-max-microvolt = <3312000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_l11c_3p3: ldo11 {
+			regulator-name = "vreg_l11c_3p3";
 			regulator-min-microvolt = <2950000>;
 			regulator-max-microvolt = <3400000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_bob: bob {
+			regulator-name = "vreg_bob";
 			regulator-min-microvolt = <3296000>;
 			regulator-max-microvolt = <3960000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_AUTO>;
 			regulator-allow-bypass;
 		};
 	};
-};
-
-&camss {
-	vdda-phy-supply = <&vdda_mipi_csi0_0p9>;
-	vdda-pll-supply = <&vdda_csi0_1p25>;
-	status = "okay";
 };
 
 &cci0 {
@@ -460,29 +535,67 @@
 	status = "okay";
 };
 
-&i2c2 {
-	clock-frequency = <100000>;
-	status = "okay";
-
-	nxp: nfc@28 {
-		compatible = "nxp,nxp-nci-i2c";
-
-		reg = <0x28>;
-
-		interrupt-parent = <&tlmm>;
-		interrupts = <37 IRQ_TYPE_LEVEL_HIGH>;
-
-		enable-gpios = <&tlmm 12 GPIO_ACTIVE_HIGH>;
-		firmware-gpios = <&tlmm 36 GPIO_ACTIVE_HIGH>;
-
-		pinctrl-names = "default", "sleep";
-		pinctrl-0 = <&nfc_default>;
-		pinctrl-1 = <&nfc_sleep>;
+&gpu {
+	zap-shader {
+		firmware-name = "qcom/sm7150/google/sunfish/a615_zap.mbn";
 	};
+};
+
+&i2c2 {
+	status = "okay";
+	clock-frequency = <400000>;
+
+	/* st21nfc nfc@8 */
+
+	codec: rt5514@57 {
+		compatible = "realtek,rt5514";
+		reg = <0x57>;
+	};
+};
+
+&i2c7 {
+	status = "okay";
+	clock-frequency = <1000000>;
+
+	/* st,fts touchscreen@49 */
+};
+
+&i2c9 {
+	status= "okay";
+	clock-frequency = <400000>;
+
+	/* microchip,pac1934 power-monitor@10 */
+	/* cirrus,cs35l41 speaker-amp@40 */
+	/* cirrus,cs35l41 speaker-amp@41 */
+
+	/*
+	typec-mux@43 {
+		compatible = "fcs,fsa4480";
+		reg = <0x43>;
+
+		interrupts-extended = <&tlmm 42 IRQ_TYPE_LEVEL_LOW>;
+
+		vcc-supply = <&vreg_bob>;
+
+		mode-switch;
+		orientation-switch;
+
+		port {
+			fsa4480_sbu_mux: endpoint {
+				remote-endpoint = <&pm6150_typec_sbu_out>;
+			};
+		};
+	};
+	*/
+
+	/* st,m24c08 e2prom@50 */
+	/* ti,drv2624 haptic@5a */
+	/* dlg,slg51000 pmic@75*/
 };
 
 &ipa {
 	memory-region = <&ipa_fw_mem>;
+	firmware-name = "qcom/sm7150/google/sunfish/ipa_fws.mbn";
 	status = "okay";
 };
 
@@ -495,14 +608,19 @@
 	status = "okay";
 
 	panel: panel@0 {
+		compatible = "google,ams581vf01-sunfish",
+			     "samsung,ams581vf01";
 		reg = <0>;
 
 		vddio-supply = <&vreg_l13a_1p8>;
-		vdd3p3-supply = <&vreg_l18a_2p8>;
+		vdd3p3-supply = <&vreg_l7c_3p0>;
+		vsn-supply = <&vreg_ibb>;
+		vsp-supply = <&vreg_lab>;
 
 		reset-gpios = <&pm6150l_gpios 9 GPIO_ACTIVE_LOW>;
 
-		pinctrl-0 = <&panel_reset_pin &panel_te_pin>;
+		pinctrl-0 = <&lcd_reset_n>,
+			    <&mdp_vsync_p>;
 		pinctrl-names = "default";
 
 		port {
@@ -521,11 +639,6 @@
 
 &mdss_dsi0_phy {
 	vdds-supply = <&vdda_mipi_dsi0_pll>;
-	status = "okay";
-};
-
-&pm6150_qgauge {
-	monitored-battery = <&battery>;
 	status = "okay";
 };
 
@@ -559,10 +672,27 @@
 
 			port@0 {
 				reg = <0>;
-				pm6150_role_switch_in: endpoint {
+				pm6150_hs_in: endpoint {
 					remote-endpoint = <&usb_1_dwc3_hs>;
 				};
 			};
+
+
+			port@1 {
+				reg = <1>;
+				pm6150_typec_mux_in: endpoint {
+					remote-endpoint = <&usb_1_qmpphy_out>;
+				};
+			};
+
+			/* TODO: Investigate, I don't think fsa4480 exists
+			port@2 {
+				reg = <2>;
+				pm6150_typec_sbu_out: endpoint {
+					remote-endpoint = <&fsa4480_sbu_mux>;
+				};
+			};
+			*/
 		};
 	};
 };
@@ -574,6 +704,8 @@
 };
 
 &pm6150l_flash {
+	status = "okay";
+
 	led-1 {
 		function = LED_FUNCTION_FLASH;
 		color = <LED_COLOR_ID_WHITE>;
@@ -593,7 +725,7 @@
 		power-source = <0>;
 	};
 
-	panel_reset_pin: panel-reset-state {
+	lcd_reset_n: lcd-reset-n-state {
 		pins = "gpio9";
 		function = PMIC_GPIO_FUNC_FUNC1;
 		qcom,drive-strength = <PMIC_GPIO_STRENGTH_MED>;
@@ -601,20 +733,6 @@
 		output-low;
 		power-source = <1>;
 	};
-};
-
-&pm6150l_lpg {
-	led@1 {
-		reg = <1>;
-		color = <LED_COLOR_ID_WHITE>;
-		function = LED_FUNCTION_STATUS;
-	};
-};
-
-&pm6150l_wled {
-	qcom,cabc;
-	qcom,cabc-sel = <1>;
-	qcom,num-strings = <3>;
 };
 
 &qfprom {
@@ -658,88 +776,41 @@
 };
 
 &remoteproc_adsp {
+	firmware-name = "qcom/sm7150/google/sunfish/adsp.mbn";
 	status = "okay";
 };
 
 &remoteproc_cdsp {
+	firmware-name = "qcom/sm7150/google/sunfish/cdsp.mbn";
 	status = "okay";
 };
 
 &remoteproc_mpss {
+	firmware-name = "qcom/sm7150/google/sunfish/modem.mbn";
 	status = "okay";
 };
 
-&sdhc_2 {
-	cd-gpios = <&tlmm 69 GPIO_ACTIVE_LOW>;
+&spi0 {
+	status = "okay";
 
-	vmmc-supply = <&vreg_l9c_3p1>;
-	vqmmc-supply = <&vreg_l6c_3p0>;
+	/* realtek,rt5514 codec@0 */
+};
 
-	pinctrl-names = "default", "sleep";
-	pinctrl-0 = <&sdc2_on>;
-	pinctrl-1 = <&sdc2_off>;
+&spi1 {
+	status = "okay";
+
+	/* google,citadel @ 0 */
+	/* st,st54j_se @ 1 */
 };
 
 &tlmm {
-	/* Reserved I/Os for NFC and FP */
-	gpio-reserved-ranges = <0 4>, <59 4>;
+	gpio-reserved-ranges = <59 4>;
 
-	panel_esd_pin: panel-esd-state {
-		pins = "gpio4";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-pull-down;
-	};
-
-	ts_reset_active: ts-reset-active-state {
-		pins = "gpio8";
-		function = "gpio";
-		drive-strength = <16>;
-		bias-pull-up;
-	};
-
-	ts_reset_suspend: ts-reset-suspend-state {
-		pins = "gpio8";
-		function = "gpio";
-		drive-strength = <16>;
-		bias-disable;
-		output-high;
-	};
-
-	ts_int_active: ts-int-active-state {
-		pins = "gpio9";
-		function = "gpio";
-		drive-strength = <16>;
-		bias-pull-up;
-	};
-
-	ts_int_suspend: ts-int-suspend-state {
-		pins = "gpio9";
-		function = "gpio";
-		drive-strength = <16>;
-		input-enable;
-		bias-disable;
-	};
-
-	panel_te_pin: panel-te-state {
+	mdp_vsync_p: mdp-vsync-p-state {
 		pins = "gpio10";
 		function = "mdp_vsync";
 		drive-strength = <2>;
 		bias-pull-down;
-	};
-
-	nfc_default: nfc-default-state {
-		pins = "gpio12", "gpio31", "gpio36";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-pull-up;
-	};
-
-	nfc_sleep: nfc-sleep-state {
-		pins = "gpio12", "gpio31", "gpio36";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-disable;
 	};
 
 	qup_uart3_sleep: qup-uart3-sleep-state {
@@ -767,60 +838,6 @@
 			bias-pull-up;
 		};
 	};
-
-	sdc2_on: sdc2-on-state {
-		clk-pins {
-			pins = "sdc2_clk";
-			bias-disable;
-			drive-strength = <16>;
-		};
-
-		cmd-pins {
-			pins = "sdc2_cmd";
-			bias-pull-up;
-			drive-strength = <10>;
-		};
-
-		data-pins {
-			pins = "sdc2_data";
-			bias-pull-up;
-			drive-strength = <10>;
-		};
-
-		sd-cd-pins {
-			pins = "gpio69";
-			function = "gpio";
-			bias-pull-up;
-			drive-strength = <2>;
-		};
-	};
-
-	sdc2_off: sdc1-off-state {
-		clk-pins {
-			pins = "sdc2_clk";
-			bias-disable;
-			drive-strength = <2>;
-		};
-
-		cmd-pins {
-			pins = "sdc2_cmd";
-			bias-pull-up;
-			drive-strength = <2>;
-		};
-
-		data-pins {
-			pins = "sdc2_data";
-			bias-pull-up;
-			drive-strength = <2>;
-		};
-
-		sd-cd-pins {
-			pins = "gpio69";
-			function = "gpio";
-			bias-pull-up;
-			drive-strength = <2>;
-		};
-	};
 };
 
 &uart3 {
@@ -828,8 +845,10 @@
 	interrupts-extended = <&intc GIC_SPI 604 IRQ_TYPE_LEVEL_HIGH>,
 			      <&tlmm 41 IRQ_TYPE_EDGE_FALLING>;
 
-	pinctrl-names = "default", "sleep";
 	pinctrl-1 = <&qup_uart3_sleep>;
+	pinctrl-names = "default",
+			"sleep";
+
 	status = "okay";
 
 	bluetooth: bluetooth {
@@ -864,21 +883,16 @@
 };
 
 &usb_1 {
-	qcom,select-utmi-as-pipe-clk;
 	status = "okay";
 };
 
 &usb_1_dwc3 {
 	dr_mode = "otg";
 	usb-role-switch;
-	maximum-speed = "high-speed";
-	/* Remove USB3 phy */
-	phys = <&usb_1_hsphy>;
-	phy-names = "usb2-phy";
 };
 
 &usb_1_dwc3_hs {
-	remote-endpoint = <&pm6150_role_switch_in>;
+	remote-endpoint = <&pm6150_hs_in>;
 };
 
 &usb_1_hsphy {
@@ -888,8 +902,15 @@
 	status = "okay";
 };
 
-&venus {
-	//status = "okay";
+&usb_1_qmpphy {
+	vdda-pll-supply = <&vdda_usb_ss_dp_1p2>;
+	vdda-phy-supply = <&vdda_usb_ss_dp_core>;
+	orientation-switch;
+	status = "okay";
+};
+
+&usb_1_qmpphy_out {
+	remote-endpoint = <&pm6150_typec_mux_in>;
 };
 
 &wifi {
@@ -898,5 +919,8 @@
 	vdd-1.3-rfa-supply = <&vdd_wcss_adc_dac>;
 	vdd-3.3-ch0-supply = <&vreg_l10c_3p3>;
 	vdd-3.3-ch1-supply = <&vreg_l11c_3p3>;
+
+	qcom,ath10k-calibration-variant = "google_sunfish";
+
 	status = "okay";
 };
